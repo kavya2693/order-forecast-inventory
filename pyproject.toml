@@ -1,0 +1,53 @@
+[project]
+name = "order-forecast"
+version = "0.1.0"
+description = "Customer x SKU weekly order forecasts for a B2B distributor, joined from shipments, field-sales app events and sales orders, turned into safety stock"
+requires-python = ">=3.11,<3.13"
+license = { text = "MIT" }
+dependencies = [
+    "duckdb>=1.1",
+    "lightgbm>=4.5",
+    "numpy>=1.26",
+    "pandas>=2.2",
+    "pyarrow>=17",
+    "scikit-learn>=1.5",
+    "xgboost>=2.1",
+]
+
+[project.scripts]
+order-forecast = "order_forecast.cli:main"
+
+[dependency-groups]
+dev = [
+    "mypy>=1.15",
+    "pandas-stubs>=2.2",
+    "pytest>=8.3",
+    "ruff>=0.11",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/order_forecast"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "SIM", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+# X / y follow the usual matrix notation for features and targets.
+"src/order_forecast/models.py" = ["N803", "N806"]
+
+[tool.mypy]
+python_version = "3.11"
+files = ["src", "scripts"]
+ignore_missing_imports = true
+check_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
