@@ -109,8 +109,10 @@ def generate(scale: Scale = FULL, out_dir: Path | str = "data/raw") -> dict[str,
     hol_logit, hol_qty = holiday_effects(week_starts)
 
     # Regional field-app outages: no events reach the API for a whole region for 1-2 weeks.
-    outages = [(int(rng.integers(10, n_w - 5)), int(rng.integers(1, 3)), int(rng.integers(0, len(REGIONS))))
-               for _ in range(3)]
+    outages = [
+        (int(rng.integers(10, n_w - 5)), int(rng.integers(1, 3)), int(rng.integers(0, len(REGIONS))))
+        for _ in range(3)
+    ]
 
     # ---- weekly latent process ----------------------------------------------------------------
     weeks_since = rng.integers(0, 4, n_p).astype(float)
@@ -131,17 +133,14 @@ def generate(scale: Scale = FULL, out_dir: Path | str = "data/raw") -> dict[str,
         live = (t >= pair_start) & (t < churn_week[pair_c])
         cycle = cust_cycle[pair_c]
         due = np.clip(weeks_since / cycle - 1.0, -1.0, 2.0)
-        logit = (
-            pair_base
-            + 1.2 * due
-            + season
-            + hol_logit[t]
-            + 0.6 * visit_prev[pair_c]
-            + 1.3 * partial_prev
-        )
+        logit = pair_base + 1.2 * due + season + hol_logit[t] + 0.6 * visit_prev[pair_c] + 1.3 * partial_prev
         # Next week's intent is formed now; a quote this week is how the rep's app sees it.
         p_order = _sigmoid(logit)
-        order = live & (intent_next | (rng.random(n_p) < 0.15 * p_order)) & (rng.random(n_p) < 0.9 + 0.1 * p_order)
+        order = (
+            live
+            & (intent_next | (rng.random(n_p) < 0.15 * p_order))
+            & (rng.random(n_p) < 0.9 + 0.1 * p_order)
+        )
         size = np.exp(cust_trend[pair_c] * t / 52.0)
         mu = pair_mean_qty * size * np.exp(0.5 * season) * hol_qty[t] * (1 + 0.5 * partial_prev)
         q = mu * rng.lognormal(-0.06, 0.35, n_p)
@@ -179,8 +178,21 @@ def generate(scale: Scale = FULL, out_dir: Path | str = "data/raw") -> dict[str,
         visit_prev = visit
 
     tables = _materialise(
-        rng, scale, week_starts, customers, skus, pair_c, pair_s, pref_day, rep_of,
-        qty_w, partial_w, quote_w, view_w, visit_w, blackout_w,
+        rng,
+        scale,
+        week_starts,
+        customers,
+        skus,
+        pair_c,
+        pair_s,
+        pref_day,
+        rep_of,
+        qty_w,
+        partial_w,
+        quote_w,
+        view_w,
+        visit_w,
+        blackout_w,
     )
     out.mkdir(parents=True, exist_ok=True)
     for name, df in tables.items():
@@ -261,7 +273,9 @@ def _materialise(
     # ---- shipments --------------------------------------------------------------------------
     so = sales_orders[sales_orders["status"] == "open"].reset_index(drop=True)
     part_map = lines.set_index(["order_id", "line_no"])["partial"]
-    key = pd.MultiIndex.from_arrays([so["order_id"], so["line_no"].where(so["line_no"] < 100, so["line_no"] - 100)])
+    key = pd.MultiIndex.from_arrays(
+        [so["order_id"], so["line_no"].where(so["line_no"] < 100, so["line_no"] - 100)]
+    )
     is_partial = part_map.reindex(key).fillna(False).to_numpy(dtype=bool)
     m = len(so)
     ship_lag = rng.choice([0, 1, 2], m, p=[0.5, 0.35, 0.15])
@@ -288,8 +302,11 @@ def _materialise(
 
     # ---- field app events -------------------------------------------------------------------
     ev = []
-    for kind, mat, per_pair in (("quote_request", quote_w, True), ("catalog_view", view_w, True),
-                                ("visit_checkin", visit_w, False)):
+    for kind, mat, per_pair in (
+        ("quote_request", quote_w, True),
+        ("catalog_view", view_w, True),
+        ("visit_checkin", visit_w, False),
+    ):
         tt, ii = np.nonzero(mat)
         c = pair_c[ii] if per_pair else ii
         keep = ~blackout_w[tt, c]
