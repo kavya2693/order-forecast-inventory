@@ -7,6 +7,7 @@ The forecast is P(order) x E[qty | order], which is the unconditional mean.
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -26,7 +27,9 @@ FIELD_APP = ["quotes_l0", "quotes_l1", "quotes_4w", "views_l0", "visits_l0", "vi
 LOGISTICS = ["partial_l0", "qty_short_l0", "missing_pod_l0", "late_lines_4w", "transit_days_8w"]
 ALL_FEATURES = HISTORY + FIELD_APP + LOGISTICS
 
-N_JOBS = 4  # the machine is shared; four threads keeps a full run to a few minutes
+# OpenMP threads spin-wait at barriers, which collapses throughput on an oversubscribed machine;
+# set ORDER_FORECAST_THREADS to the cores you actually have free.
+N_JOBS = int(os.environ.get("ORDER_FORECAST_THREADS", "1"))
 
 
 def horizon_frame(df: pd.DataFrame, h: int) -> pd.DataFrame:
