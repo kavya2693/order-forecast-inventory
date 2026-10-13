@@ -1,0 +1,47 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - run: uv sync --locked
+
+      - name: lint
+        run: uv run ruff check .
+
+      - name: format
+        run: uv run ruff format --check .
+
+      - name: types
+        run: uv run mypy
+
+      - name: tests
+        run: uv run pytest -q
+
+      # Same code path as the full run, at 80 customers x 40 SKUs so it finishes in a couple of minutes.
+      - name: end-to-end backtest, reduced scale
+        run: uv run order-forecast --small --refresh --out ci-outputs
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: build image
+        run: docker buildx build --load -t order-forecast .
+
+      - name: run image, reduced scale
+        run: docker run --rm order-forecast order-forecast --small --refresh --no-ablation
