@@ -35,13 +35,14 @@ def ets_forecasts(panel: pd.DataFrame, fit_until: pd.Timestamp) -> pd.DataFrame:
 
     ``panel`` needs customer_id, sku_id, week_start, qty_l0 (the week's demand).
     """
-    wide = panel.pivot_table(index=["customer_id", "sku_id"], columns="week_start", values="qty_l0",
-                             aggfunc="sum", observed=True)
+    wide = panel.pivot_table(
+        index=["customer_id", "sku_id"], columns="week_start", values="qty_l0", aggfunc="sum", observed=True
+    )
     weeks = wide.columns
     y = wide.to_numpy(dtype=float)
     first = np.argmax(~np.isnan(y), axis=1)
     init = np.array([np.nanmean(y[i, f : f + INIT_WEEKS]) for i, f in enumerate(first)])
-    fit_mask = np.asarray(weeks < fit_until)
+    fit_mask = np.asarray(pd.DatetimeIndex(weeks) < fit_until)
 
     best_sse = np.full(len(y), np.inf)
     best_levels = np.full_like(y, np.nan)
@@ -55,8 +56,12 @@ def ets_forecasts(panel: pd.DataFrame, fit_until: pd.Timestamp) -> pd.DataFrame:
         best_alpha = np.where(better, a, best_alpha)
         best_levels[better] = levels[better]
 
-    out = pd.DataFrame(best_levels, index=wide.index, columns=weeks).stack().rename("ets").reset_index()
-    out["ets_alpha"] = out.set_index(["customer_id", "sku_id"]).index.map(
-        pd.Series(best_alpha, index=wide.index)
+    keys = ["customer_id", "sku_id"]
+    long = (
+        pd.DataFrame(best_levels, index=wide.index, columns=weeks)
+        .reset_index()
+        .melt(id_vars=keys, var_name="week_start", value_name="ets")
+        .dropna(subset=["ets"])
     )
-    return out
+    alphas = pd.DataFrame({"ets_alpha": best_alpha}, index=wide.index).reset_index()
+    return long.merge(alphas, on=keys).sort_values([*keys, "week_start"]).reset_index(drop=True)

@@ -43,12 +43,13 @@ def _lgb_clf(seed: int) -> Any:
 
 
 def _lgb_reg(seed: int, objective: str = "gamma") -> Any:
-    extra = {"tweedie_variance_power": 1.3} if objective == "tweedie" else {}
-    return lgb.LGBMRegressor(
+    params: dict[str, Any] = dict(
         objective=objective, n_estimators=400, learning_rate=0.05, num_leaves=63, min_child_samples=100,
         subsample=0.8, subsample_freq=1, colsample_bytree=0.8, n_jobs=N_JOBS, random_state=seed, verbose=-1,
-        **extra,
     )  # fmt: skip
+    if objective == "tweedie":
+        params["tweedie_variance_power"] = 1.3
+    return lgb.LGBMRegressor(**params)
 
 
 def _xgb_clf(seed: int) -> Any:
