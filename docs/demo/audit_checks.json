@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-14 14:41",
+ "generated": "2026-10-14 18:55",
  "commit": "7b2e475645cf52bef902c8ef2d00e693571debab",
  "checks": [
   {
@@ -52,7 +52,7 @@
   },
   {
    "id": "F-07",
-   "shown": "3 systems joined in SQL \u00b7 stock costs 25% a year",
+   "shown": "3 systems joined in SQL \u00b7 holding stock costs 25% a year",
    "type": "direct",
    "computed": "true",
    "expect": "true",
@@ -132,7 +132,7 @@
   },
   {
    "id": "F-17",
-   "shown": "The top accuracy score picked a costlier model",
+   "shown": "The accuracy leader costs the most.",
    "type": "derived",
    "computed": "true",
    "expect": "true",
@@ -348,23 +348,23 @@
   },
   {
    "id": "F-44",
-   "shown": "123,907 \u00b7 124,338 \u00b7 129,047 \u00b7 136,464",
+   "shown": "123,907 \u00b7 129,047 \u00b7 136,464",
    "type": "direct",
-   "computed": "123,907 \u00b7 124,338 \u00b7 129,047 \u00b7 136,464",
-   "expect": "123,907 \u00b7 124,338 \u00b7 129,047 \u00b7 136,464",
+   "computed": "123,907 \u00b7 129,047 \u00b7 136,464",
+   "expect": "123,907 \u00b7 129,047 \u00b7 136,464",
    "status": "pass"
   },
   {
    "id": "F-45",
-   "shown": "0.118 \u00b7 0.120 \u00b7 0.121 \u00b7 0.214",
+   "shown": "0.214 \u00b7 0.121 \u00b7 0.118",
    "type": "direct",
-   "computed": "0.118 \u00b7 0.120 \u00b7 0.121 \u00b7 0.214",
-   "expect": "0.118 \u00b7 0.120 \u00b7 0.121 \u00b7 0.214",
+   "computed": "0.214 \u00b7 0.121 \u00b7 0.118",
+   "expect": "0.214 \u00b7 0.121 \u00b7 0.118",
    "status": "pass"
   },
   {
    "id": "F-46",
-   "shown": "826 / 829 / 860 / 910 px",
+   "shown": "189 / 106 / 104 px \u00b7 195 / 203 / 214 px",
    "type": "derived",
    "computed": "true",
    "expect": "true",
@@ -372,10 +372,26 @@
   },
   {
    "id": "F-47",
-   "shown": "One Tweedie model tied it; it stays only because P(order) is a number a rep can act on",
+   "shown": "orders 14% too little in total",
+   "type": "derived",
+   "computed": "14%",
+   "expect": "14%",
+   "status": "pass"
+  },
+  {
+   "id": "F-51",
+   "shown": "The code gives each forecast the buffer that fills 98%, then compares cost.",
    "type": "direct",
    "computed": "true",
    "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-52",
+   "shown": "129,047 vs ETS (smoothed history) 242,371 \u00b7 \u221246.8%",
+   "type": "derived",
+   "computed": "129,047 \u00b7 242,371 \u00b7 -46.8%",
+   "expect": "129,047 \u00b7 242,371 \u00b7 -46.8%",
    "status": "pass"
   },
   {

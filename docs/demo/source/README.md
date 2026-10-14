@@ -48,7 +48,7 @@ python3 docs/demo/source/tools/inject_sheet.py docs/demo/source/assets/order_lis
   docs/demo/source/compositions/value.html docs/demo/source/compositions/s04-routes.html \
   --rows S0108,S0014,S0005,S0066,S0131,S0044
 
-# 3. render (86 s, 1920x1080, 30 fps, silent) and compress
+# 3. render (88.8 s, 1920x1080, 30 fps, silent) and compress
 cd docs/demo/source
 npx --yes hyperframes@0.8.156 check
 npx --yes hyperframes@0.8.156 render -f 30 -q looks -o renders/order-forecast-inventory-master.mp4

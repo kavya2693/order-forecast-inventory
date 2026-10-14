@@ -5,22 +5,22 @@
     <template>
       <style>
         #arch-root { position: absolute; inset: 0; }
-        #arch-root .diagram { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 960px 620px; }
+        #arch-root .diagram { position: absolute; left: 0; top: 26px; width: 1920px; height: 1080px; transform-origin: 960px 620px; }
         #arch-root svg.wires { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: visible; }
         #arch-root .wire { fill: none; stroke-width: 3.5; stroke-linejoin: round; }
         #arch-root .layer-lab {
-          position: absolute; top: 214px; font-family: var(--mono); font-size: 20px; font-weight: 700;
-          letter-spacing: 0.14em; white-space: nowrap;
+          position: absolute; top: 214px; font-family: var(--mono); font-size: 22px; font-weight: 700;
+          letter-spacing: 0.1em; white-space: nowrap;
         }
         #arch-root .layer-lab span { color: var(--ink-mute); font-weight: 400; letter-spacing: 0.02em; }
         #arch-root .node {
           position: absolute; display: flex; flex-direction: column; justify-content: center; gap: 6px;
-          padding: 0 22px; border: 2px solid var(--line); border-radius: 14px; background: var(--panel);
+          padding: 14px 22px 0; border: 2px solid var(--line); border-radius: 14px; background: var(--panel);
         }
         #arch-root .node .t { font-size: 27px; font-weight: 700; letter-spacing: -0.01em; color: var(--ink); white-space: nowrap; }
-        #arch-root .node .s { font-family: var(--mono); font-size: 20px; color: var(--ink-soft); white-space: nowrap; }
+        #arch-root .node .s { font-family: var(--mono); font-size: 22px; line-height: 1.15; color: var(--ink-soft); white-space: nowrap; }
         #arch-root .f {
-          position: absolute; right: 14px; top: -16px; font-family: var(--mono); font-size: 20px; padding: 1px 10px;
+          position: absolute; right: 14px; top: -15px; font-family: var(--mono); font-size: 22px; line-height: 1.1; padding: 0 10px;
           border-radius: 6px; background: var(--bg); border: 2px solid var(--line); white-space: nowrap;
         }
         #arch-root .L-data { border-color: rgba(127, 168, 255, 0.55); }
@@ -37,31 +37,31 @@
         #arch-root .hero-m .f { color: var(--c-model); }
         #arch-root .chips { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 22px; color: var(--ink-mute); }
         #arch-root .chips b {
-          display: block; font-weight: 700; font-size: 20px; color: var(--c-model); padding: 3px 6px; border-radius: 8px;
+          display: block; font-weight: 700; font-size: 22px; color: var(--c-model); padding: 3px 6px; border-radius: 8px;
           border: 2px solid rgba(185, 162, 255, 0.55); background: rgba(185, 162, 255, 0.1); white-space: nowrap;
         }
         #arch-root .formula { font-family: var(--mono); font-size: 30px; font-weight: 700; color: var(--c-opt); white-space: nowrap; }
         #arch-root .ctrl { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
         #arch-root .ctrl i { display: block; width: 16px; height: 16px; background: var(--c-eval); transform: rotate(45deg); border-radius: 2px; flex: 0 0 auto; }
-        #arch-root .ctrl span { font-family: var(--mono); font-size: 20px; font-weight: 700; color: var(--c-eval); white-space: nowrap; }
-        #arch-root .nfr { font-family: var(--mono); font-size: 20px; color: var(--c-eval); white-space: nowrap; }
+        #arch-root .ctrl span { font-family: var(--mono); font-size: 22px; font-weight: 700; color: var(--c-eval); white-space: nowrap; }
+        #arch-root .nfr { font-family: var(--mono); font-size: 22px; color: var(--c-eval); white-space: nowrap; }
         /* SQL container */
         #arch-root .box-sql {
           position: absolute; border: 2px dashed rgba(127, 168, 255, 0.45); border-radius: 18px; background: rgba(127, 168, 255, 0.035);
         }
-        #arch-root .box-sql .hd { position: absolute; left: 22px; top: 10px; font-family: var(--mono); font-size: 20px; color: var(--c-data); white-space: nowrap; }
+        #arch-root .box-sql .hd { position: absolute; left: 22px; top: 10px; font-family: var(--mono); font-size: 22px; color: var(--c-data); white-space: nowrap; }
         #arch-root .box-sql .hd span { color: var(--c-eval); }
         /* cylinders = data stores */
         #arch-root .cyl { position: absolute; }
         #arch-root .cyl svg { position: absolute; left: 0; top: 0; overflow: visible; }
         #arch-root .cyl .txt { position: absolute; left: 0; right: 0; bottom: 10px; top: 26px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; }
         #arch-root .cyl .t { font-size: 24px; font-weight: 700; color: var(--ink); white-space: nowrap; }
-        #arch-root .cyl .s { font-family: var(--mono); font-size: 20px; color: var(--ink-soft); white-space: nowrap; }
+        #arch-root .cyl .s { font-family: var(--mono); font-size: 22px; color: var(--ink-soft); white-space: nowrap; }
         /* document = output files */
         #arch-root .doc { position: absolute; padding: 20px 22px 14px; background: var(--panel); border: 2px solid rgba(63, 216, 168, 0.6);
           border-radius: 6px 30px 6px 6px; display: flex; flex-direction: column; gap: 3px; }
         #arch-root .doc .t { font-size: 25px; font-weight: 700; color: var(--ink); white-space: nowrap; }
-        #arch-root .doc .s { font-family: var(--mono); font-size: 20px; color: var(--ink-soft); white-space: nowrap; }
+        #arch-root .doc .s { font-family: var(--mono); font-size: 22px; color: var(--ink-soft); white-space: nowrap; }
         #arch-root .doc .f { left: 14px; right: auto; color: var(--c-opt); }
         /* evaluation band */
         #arch-root .band {
@@ -70,14 +70,14 @@
         }
         #arch-root .band .f { left: 14px; right: auto; color: var(--c-eval); }
         #arch-root .band .t { font-size: 27px; font-weight: 700; color: var(--ink); white-space: nowrap; }
-        #arch-root .band .s { font-family: var(--mono); font-size: 20px; color: var(--ink-soft); white-space: nowrap; }
+        #arch-root .band .s { font-family: var(--mono); font-size: 22px; color: var(--ink-soft); white-space: nowrap; }
         #arch-root .band .s b { color: var(--c-eval); font-weight: 700; }
-        #arch-root .tline { display: flex; height: 34px; font-family: var(--mono); font-size: 20px; font-weight: 700; }
+        #arch-root .tline { display: flex; height: 34px; font-family: var(--mono); font-size: 22px; font-weight: 700; }
         #arch-root .tline div { display: flex; align-items: center; justify-content: center; border-radius: 6px; margin-right: 4px; white-space: nowrap; }
-        #arch-root .wire-label { position: absolute; font-family: var(--mono); font-size: 20px; white-space: nowrap; }
+        #arch-root .wire-label { position: absolute; font-family: var(--mono); font-size: 22px; white-space: nowrap; }
         #arch-root .legend, #arch-root .cp {
-          position: absolute; left: 560px; top: 1008px; display: flex; gap: 24px; align-items: center;
-          font-family: var(--mono); font-size: 20px; color: var(--ink-soft); white-space: nowrap;
+          position: absolute; left: 560px; top: 982px; display: flex; gap: 24px; align-items: center;
+          font-family: var(--mono); font-size: 22px; color: var(--ink-soft); white-space: nowrap;
         }
         #arch-root .cp { color: var(--c-opt); font-weight: 700; gap: 12px; }
         #arch-root .cp i { display: block; width: 30px; height: 6px; border-radius: 3px; background: var(--c-opt); }
@@ -90,6 +90,7 @@
         <div class="scene" id="arch-in">
           <div class="eyebrow" data-layout-allow-overlap id="arch-eyebrow">05 · Architecture</div>
           <div class="scene-title" data-layout-allow-overlap id="arch-title">Three sources, one SQL panel, one stock decision.</div>
+          <div class="scene-sub" id="arch-sub">Each box is a file in the repo. Data flows left to right into one weekly stock order; the band below scores it.</div>
           <div class="diagram" id="arch-diagram">
             <svg class="wires" viewBox="0 0 1920 1080" id="arch-svg"></svg>
             <div id="arch-nodes"></div>
@@ -131,9 +132,9 @@
           // ② SQL feature layer (three DuckDB stages) + the feature store
           add('<div class="box-sql" id="n-bx" style="left:500px;top:256px;width:390px;height:452px"><div class="hd">pipeline.py · DuckDB</div></div>');
           add('<div class="node L-data" id="n-b1" style="left:524px;top:318px;width:342px;height:124px"><div class="f">01_staging.sql</div>' +
-            '<div class="t">Clean + dedupe</div><div class="s">−11,623 cancelled lines</div><div class="s">−8,136 API retries</div></div>');
+            '<div class="t">Clean + dedupe</div><div class="s">−11,623 cancelled</div><div class="s">−8,136 API retries</div></div>');
           add('<div class="node L-data" id="n-b2" style="left:524px;top:462px;width:342px;height:96px"><div class="f">02_panel.sql</div>' +
-            '<div class="t">Weekly panel</div><div class="s">zero weeks made explicit</div></div>');
+            '<div class="t">Weekly panel</div><div class="s">every zero week kept</div></div>');
           add('<div class="node L-data" id="n-b3" style="left:524px;top:588px;width:342px;height:96px"><div class="f">03_features.sql</div>' +
             '<div class="t">Features as of week t</div><div class="s">lags · app · logistics</div></div>');
           cyl("n-b4", 540, 762, 310, 116, "features", "1,337,363 line-weeks", COL.data);
@@ -141,8 +142,8 @@
           // ③ models
           add('<div class="node L-model hero-m" id="n-c1" style="left:970px;top:262px;width:345px;height:258px"><div class="f">models.py · TwoStage</div>' +
             '<div class="t">Two-stage forecast</div>' +
-            '<div class="chips"><b>P(order)</b>×<b>E[qty|order]</b></div>' +
-            '<div class="s">LightGBM · XGBoost</div><div class="s">1 and 2 weeks ahead</div>' +
+            '<div class="chips"><b>P(order)</b>×<b>E[qty]</b></div>' +
+            '<div class="s">order? × how many</div><div class="s">LightGBM · XGBoost</div><div class="s">1 and 2 weeks ahead</div>' +
             '<div class="nfr">fit on 916,478 rows</div></div>');
           add('<div class="node L-model" id="n-c2" style="left:970px;top:552px;width:345px;height:98px"><div class="f">models.py</div>' +
             '<div class="t">Tweedie, one stage</div><div class="s">challenger</div></div>');
@@ -153,39 +154,39 @@
           add('<div class="node hero-o" id="n-d1" style="left:1420px;top:262px;width:390px;height:258px"><div class="f">inventory.py</div>' +
             '<div class="t">Order-up-to policy</div>' +
             '<div class="formula">S = F₁ + F₂ + z·σ</div>' +
-            '<div class="s">Σ lines → SKU · 1-wk lead</div>' +
+            '<div class="s">per SKU · 1-week lead</div>' +
             '<div class="ctrl"><i></i><span>z_for_fill_rate()</span></div>' +
-            '<div class="s">bisect z until 98% fill</div></div>');
-          add('<div class="doc" id="n-d3" style="left:1600px;top:578px;width:210px;height:160px"><div class="f">cli.py</div>' +
+            '<div class="s">raise buffer to 98% fill</div></div>');
+          add('<div class="doc" id="n-d3" style="left:1588px;top:578px;width:224px;height:160px"><div class="f">cli.py</div>' +
             '<div class="t">outputs/</div><div class="s">inventory.csv</div><div class="s">accuracy.csv</div><div class="s">results.md</div></div>');
-          add('<div class="node L-risk" id="n-d2" style="left:1600px;top:772px;width:210px;height:92px"><div class="f">evaluate.py</div>' +
+          add('<div class="node L-risk" id="n-d2" style="left:1600px;top:768px;width:210px;height:104px"><div class="f">evaluate.py</div>' +
             '<div class="t" style="font-size:24px">fixed z = 1.65</div><div class="s">fallback</div></div>');
 
           // ⑤ evaluation band (backtest split, metrics, ablation, run time)
-          add('<div class="band" id="n-e1" style="left:100px;top:902px;width:1710px;height:84px"><div class="f">⑤ evaluate.py · metrics.py</div>' +
+          add('<div class="band" id="n-e1" style="left:100px;top:902px;width:1710px;height:72px"><div class="f">⑤ evaluate.py · metrics.py</div>' +
             '<div class="t">Backtest</div>' +
-            '<div class="tline"><div style="width:250px;background:rgba(178,191,204,0.14);color:var(--ink-soft)">train</div>' +
+            '<div class="tline"><div style="width:250px;background:rgba(200,211,222,0.14);color:var(--ink-soft)">train</div>' +
             '<div style="width:130px;background:rgba(242,196,109,0.28);color:var(--c-eval)">val 13 wk</div>' +
             '<div style="width:160px;background:var(--c-eval);color:#1b1a17">test 26 wk</div></div>' +
-            '<div class="s">1 − WAPE · bias · fill · <b>holding cost</b></div>' +
-            '<div class="s">ablation ×3</div>' +
+            '<div class="s">accuracy · bias · fill · <b>holding cost</b></div>' +
+            '<div class="s">3 source tests</div>' +
             '<div class="s"><b>523 s</b> full run</div></div>');
 
           // wire labels: what flows on each edge
           const lab = (id, x, y, txt, c) => add('<div class="wire-label" id="' + id + '" style="left:' + x + "px;top:" + y + "px;color:" + c + '">' + txt + "</div>");
-          lab("arch-l-raw", 411, 340, "parquet", "var(--c-data)");
-          lab("arch-l-row", 455, 722, "1 row / line / week", "var(--c-data)");
+          lab("arch-l-raw", 368, 292, "parquet", "var(--c-data)");
+          lab("arch-l-row", 430, 722, "1 row / line / week", "var(--c-data)");
           lab("arch-l-panel", 856, 786, "panel", "var(--c-data)");
           lab("arch-l-f", 1332, 356, "F₁, F₂", "var(--c-model)");
-          lab("arch-l-fc", 1147, 826, "test forecasts", "var(--c-model)");
+          lab("arch-l-fc", 1147, 842, "test forecasts", "var(--c-model)");
           lab("arch-l-qty", 1662, 526, "order qty", "var(--c-opt)");
-          lab("arch-l-nan", 1464, 690, "z = NaN", "var(--c-risk)");
-          lab("arch-l-sigma", 1464, 846, "σ / SKU", "var(--c-eval)");
+          lab("arch-l-nan", 1462, 690, "if no z", "var(--c-risk)");
+          lab("arch-l-sigma", 1300, 798, "error / SKU", "var(--c-eval)");
 
           add('<div class="legend" id="arch-legend">' +
             '<span><i style="background:var(--c-data)"></i>data</span><span><i style="background:var(--c-model)"></i>models</span>' +
             '<span><i style="background:var(--c-opt)"></i>decision</span><span><i style="background:var(--c-eval)"></i>evaluation</span>' +
-            '<span><svg viewBox="0 0 40 12"><path d="M0 6H40" stroke="#b2bfcc" stroke-width="3"/></svg>batch hand-off</span>' +
+            '<span><svg viewBox="0 0 40 12"><path d="M0 6H40" stroke="#c8d3de" stroke-width="3"/></svg>batch hand-off</span>' +
             '<span><svg viewBox="0 0 40 12"><path d="M0 6H40" stroke="#f2c46d" stroke-width="3" stroke-dasharray="8 6"/></svg>feedback</span>' +
             '<span><svg viewBox="0 0 40 12"><path d="M2 6H40" stroke="#ff8a73" stroke-width="3" stroke-dasharray="2 7" stroke-linecap="round"/></svg>fallback</span></div>');
           add('<div class="cp" id="arch-cp"><i></i>critical path: orders → SQL → features → two-stage → policy → outputs</div>');
@@ -211,7 +212,7 @@
             { id: "sig", pts: [[1450, 902], [1450, 520]], c: "eval", at: 6.6, step: 4.3, style: "dash" },
             { id: "dd3", pts: [[1650, 520], [1650, 578]], c: "opt", at: 5.3, step: 5.2, crit: true },
             { id: "fb", pts: [[1580, 520], [1580, 818], [1600, 818]], c: "risk", at: 5.8, style: "dot" },
-            { id: "fb2", pts: [[1705, 772], [1705, 738]], c: "risk", at: 6.0, style: "dot" },
+            { id: "fb2", pts: [[1705, 768], [1705, 738]], c: "risk", at: 6.0, style: "dot" },
           ];
           const lenOf = (pts) => pts.slice(1).reduce((s, p, i) => s + Math.hypot(p[0] - pts[i][0], p[1] - pts[i][1]), 0);
           wires.forEach((w) => {
@@ -250,6 +251,7 @@
           tl.fromTo("#arch-in", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 0);
           tl.fromTo("#arch-eyebrow", { opacity: 0, x: -24 }, { opacity: 1, x: 0, duration: 0.5, ease: "power2.out" }, 0.1);
           tl.fromTo("#arch-title", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }, 0.2);
+          tl.fromTo("#arch-sub", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 0.5);
           tl.fromTo("#arch-diagram", { scale: 0.975 }, { scale: 1, duration: D, ease: "sine.out" }, 0);
           const pop = (sel, at, from) =>
             tl.fromTo(sel, Object.assign({ opacity: 0, x: 0, y: 0 }, from), { opacity: 1, x: 0, y: 0, duration: 0.5, ease: "power3.out" }, at);
@@ -307,7 +309,7 @@
           // ================= critical path highlight =================
           const CP = 12.0;
           tl.to(wires.filter((w) => !w.crit).map((w) => w.el), { attr: { opacity: 0.22 }, duration: 0.5 }, CP);
-          tl.to(["#n-a2", "#n-a3", "#n-a4", "#n-c2", "#n-c3", "#n-d2", "#n-e1", "#arch-l-fc", "#arch-l-sigma", "#arch-l-nan"], { opacity: 0.35, duration: 0.5 }, CP);
+          tl.to(["#n-a2", "#n-a3", "#n-a4", "#n-c2", "#n-c3", "#n-d2", "#n-e1", "#arch-l-fc", "#arch-l-sigma", "#arch-l-nan"], { opacity: 0.75, duration: 0.5 }, CP); // stays >= 4.5:1
           wires.filter((w) => w.crit).forEach((w, i) => {
             tl.to(w.el, { attr: { stroke: COL.opt, "stroke-width": 6, opacity: 1 }, duration: 0.3 }, CP + 0.2 + i * 0.16);
             tl.to(w.ah, { attr: { fill: COL.opt }, duration: 0.3 }, CP + 0.2 + i * 0.16);
@@ -317,7 +319,7 @@
             tl.to(s, { filter: "drop-shadow(0 0 12px rgba(63,216,168,0.8))", duration: 0.3 }, CP + 0.15 + i * 0.18));
           tl.to("#arch-legend", { opacity: 0, duration: 0.3 }, CP);
           tl.fromTo("#arch-cp", { opacity: 0, x: -16 }, { opacity: 1, x: 0, duration: 0.4, ease: "power2.out" }, CP + 0.3);
-          tl.to("#arch-in", { opacity: 0, duration: 0.4, ease: "power2.in" }, D - 0.4);
+          tl.to("#arch-in", { opacity: 0, duration: 0.4, ease: "power2.in" }, D - 0.8); // dip: fully out before the next scene starts
           window.__timelines["arch"] = tl;
         })();
       </script>

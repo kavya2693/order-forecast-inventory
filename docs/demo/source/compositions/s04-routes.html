@@ -12,9 +12,9 @@
         }
         #routes-root .legend span { display: flex; align-items: center; gap: 12px; }
         #routes-root .legend i { display: block; width: 30px; height: 5px; border-radius: 3px; }
-        #routes-root .legend i.bar { width: 16px; height: 22px; border-radius: 3px; background: rgba(178, 191, 204, 0.35); }
-        #routes-root .sub { position: absolute; left: 120px; top: 196px; font-family: var(--mono); font-size: 24px; color: var(--ink-mute); white-space: nowrap; }
-        #routes-root .ax { font-family: "JetBrains Mono", monospace; font-size: 20px; fill: #8494a6; }
+        #routes-root .legend i.bar { width: 16px; height: 22px; border-radius: 3px; background: rgba(200, 211, 222, 0.35); }
+        #routes-root .sub { position: absolute; left: 120px; top: 186px; font-size: 28px; font-weight: 500; color: var(--ink-soft); white-space: nowrap; }
+        #routes-root .ax { font-family: "JetBrains Mono", monospace; font-size: 22px; fill: #9fb0c2; }
         #routes-root .card {
           position: absolute; left: 1420px; top: 300px; width: 380px; padding: 26px 30px; border-radius: 16px;
           border: 2px solid rgba(63, 216, 168, 0.6); background: rgba(12, 22, 32, 0.96);
@@ -30,14 +30,14 @@
         <div class="scene" id="routes-in">
           <div class="eyebrow" data-layout-allow-overlap id="routes-eyebrow">06 · The system running</div>
           <div class="scene-title" data-layout-allow-overlap id="routes-title">One SKU, 26 held-out weeks: who saw the orders coming?</div>
-          <div class="sub" id="routes-sub-a">SKU <span id="routes-sku"></span> · all customer lines summed · forecast made one week ahead</div>
+          <div class="sub" id="routes-sub-a">One product (SKU <span id="routes-sku"></span>), all customers added up, forecast one week ahead. The line closer to the bars is better.</div>
           <div class="legend" id="routes-legend-a">
             <span><i class="bar"></i>what customers ordered</span>
             <span><i style="background: var(--c-model)"></i>two-stage LightGBM</span>
-            <span><i style="background: #8494a6"></i>ETS, smoothed history</span>
+            <span><i style="background: #9fb0c2"></i>ETS, smoothed history</span>
           </div>
           <div class="scene-title" data-layout-allow-overlap id="routes-title-b">All 150 SKUs, both tuned to fill 98%: stock on the shelf.</div>
-          <div class="sub" id="routes-sub-b">value of stock after each week's orders, test weeks after warm-up</div>
+          <div class="sub" id="routes-sub-b">Value of stock held each week, both forecasts at the same 98% fill. Lower is better: less cash on the shelf.</div>
           <svg class="chart" id="routes-svg" viewBox="0 0 1920 1080"></svg>
           <div class="card" id="routes-card">
             <div class="k">AVERAGE STOCK VALUE</div>
@@ -97,7 +97,7 @@
             p.setAttribute("stroke-dashoffset", L);
             return { p, L };
           };
-          const lEts = line(ptsA(TRACE.ets), "#8494a6", 5, "routes-l-ets", gA);
+          const lEts = line(ptsA(TRACE.ets), "#9fb0c2", 5, "routes-l-ets", gA);
           const lLg = line(ptsA(TRACE.lgbm), "#b9a2ff", 6, "routes-l-lg", gA);
 
           // ---------- phase B: stock value on the shelf, all SKUs, both at 98% fill ----------
@@ -127,10 +127,10 @@
             el("path", { d, fill: col, opacity: 0.12, id: id + "-a" }, gB);
             return line(pts, col, 5, id, gB);
           };
-          const bE = area(sE, "#8494a6", "routes-b-ets");
+          const bE = area(sE, "#9fb0c2", "routes-b-ets");
           const bL = area(sL, "#3fd8a8", "routes-b-lg");
           const avg = (arr) => arr.reduce((s, v) => s + v, 0) / arr.length;
-          const tagE = el("text", { x: B.x1 + 14, y: yB(avg(sE)) + 7, class: "ax", fill: "#b2bfcc", id: "routes-tag-e" }, gB);
+          const tagE = el("text", { x: B.x1 + 14, y: yB(avg(sE)) + 7, class: "ax", fill: "#c8d3de", id: "routes-tag-e" }, gB);
           tagE.textContent = "ETS";
           const tagL = el("text", { x: B.x1 + 14, y: yB(avg(sL)) + 7, class: "ax", id: "routes-tag-l" }, gB);
           tagL.textContent = "two-stage";
@@ -159,7 +159,7 @@
           const ce = document.getElementById("routes-num");
           tl.to(c, { v: 516188, duration: 2.2, ease: "power2.inOut", onUpdate: () => { ce.textContent = fmt(c.v); } }, P2 + 1.8);
           tl.fromTo("#routes-badge", { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1, duration: 0.5, ease: "power3.out" }, P2 + 4.0);
-          tl.to("#routes-in", { opacity: 0, duration: 0.4, ease: "power2.in" }, D - 0.4);
+          tl.to("#routes-in", { opacity: 0, duration: 0.4, ease: "power2.in" }, D - 0.8); // dip: fully out before the next scene starts
           window.__timelines["routes"] = tl;
         })();
       </script>

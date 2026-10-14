@@ -14,7 +14,8 @@
         #endcard-root .chip.opt { border: 2px solid rgba(63, 216, 168, 0.65); background: rgba(63, 216, 168, 0.1); }
         #endcard-root .chip.mod { border: 2px solid rgba(185, 162, 255, 0.65); background: rgba(185, 162, 255, 0.1); }
         #endcard-root .chip.dat { border: 2px solid rgba(127, 168, 255, 0.65); background: rgba(127, 168, 255, 0.1); }
-        #endcard-root .run { margin-top: 44px; font-family: var(--mono); font-size: 26px; color: var(--ink-mute); white-space: pre; }
+        #endcard-root .run { margin-top: 44px; font-family: var(--mono); font-size: 26px; color: var(--ink-soft); white-space: pre; }
+        #endcard-root .sub { margin-top: 18px; font-size: 28px; font-weight: 500; color: var(--ink-soft); }
       </style>
       <div id="endcard-root" data-composition-id="endcard" data-width="1920" data-height="1080">
         <div class="scene" id="endcard-in">
@@ -29,6 +30,7 @@
               <span class="chip dat" id="endcard-c4">Python</span>
             </div>
             <div class="run" id="endcard-run">$ make run   # 400 customers × 150 SKUs, ~9 min</div>
+            <div class="sub" id="endcard-sub">One command rebuilds every table the numbers in this video come from.</div>
           </div>
         </div>
       </div>
@@ -42,6 +44,7 @@
           [1, 2, 3, 4].forEach((n, i) =>
             tl.fromTo("#endcard-c" + n, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, 0.8 + i * 0.1));
           tl.fromTo("#endcard-run", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 1.4);
+          tl.fromTo("#endcard-sub", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 1.7);
           window.__timelines["endcard"] = tl;
         })();
       </script>

@@ -11,17 +11,21 @@
         #hook-root .line .num { font-family: var(--mono); font-weight: 700; color: var(--c-opt); letter-spacing: -0.04em; }
         #hook-root .line .num.d { color: var(--c-data); }
         #hook-root .line.soft { color: var(--ink-soft); font-weight: 700; }
-        #hook-root .facts { position: absolute; left: 120px; top: 770px; display: flex; gap: 20px; }
+        #hook-root .facts { position: absolute; left: 120px; top: 760px; display: flex; gap: 20px; }
         #hook-root .fact {
-          display: block; font-family: var(--mono); font-size: 28px; padding: 14px 24px; border-radius: 10px;
+          display: block; font-family: var(--mono); font-size: 26px; padding: 14px 22px; border-radius: 10px;
           border: 2px solid var(--line); background: rgba(15, 26, 38, 0.9); color: var(--ink);
         }
+        #hook-root .scene-sub { top: 132px; }
+        #hook-root .def { position: absolute; left: 120px; top: 862px; width: 1680px; font-size: 28px; font-weight: 500; color: var(--ink-soft); }
+        #hook-root .def b { color: var(--ink); font-weight: 700; }
         #hook-root .fact.risk { border-color: rgba(255, 138, 115, 0.6); color: var(--c-risk); }
       </style>
       <div id="hook-root" data-composition-id="hook" data-width="1920" data-height="1080">
         <div class="scene" id="hook-in">
           <svg class="rings" id="hook-rings" aria-hidden="true" width="1920" height="1080" viewBox="0 0 1920 1080"></svg>
           <div class="eyebrow" data-layout-allow-overlap id="hook-eyebrow">02 · This project</div>
+          <div class="scene-sub" id="hook-sub">The project in one line: forecast every customer's weekly order for every product.</div>
           <div class="lines">
             <span class="line" id="hook-l1"><span class="num">400</span> customers × <span class="num">150</span> SKUs.</span>
             <span class="line" id="hook-l2"><span class="num d">8,955</span> customer-SKU lines.</span>
@@ -30,8 +34,9 @@
           <div class="facts">
             <span class="fact" id="hook-f1">60% of line-weeks: no order</span>
             <span class="fact" id="hook-f2">3 systems joined in SQL</span>
-            <span class="fact risk" id="hook-f3">stock costs 25% a year</span>
+            <span class="fact risk" id="hook-f3">holding stock costs 25% a year</span>
           </div>
+          <div class="def" id="hook-def"><b>SKU</b> = one product. <b>Line</b> = one customer buying one SKU. <b>Holding cost</b> = money tied up in stock, per year.</div>
         </div>
       </div>
       <script>
@@ -62,7 +67,9 @@
           tl.fromTo("#hook-l3", { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.7, ease: "expo.out" }, 1.1);
           ["#hook-f1", "#hook-f2", "#hook-f3"].forEach((f, i) =>
             tl.fromTo(f, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.45, ease: "power2.out" }, 1.8 + i * 0.15));
-          tl.to("#hook-in", { opacity: 0, duration: 0.4, ease: "power2.in" }, D - 0.4);
+          tl.fromTo("#hook-sub", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 0.3);
+          tl.fromTo("#hook-def", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 2.4);
+          tl.to("#hook-in", { opacity: 0, duration: 0.4, ease: "power2.in" }, D - 0.8); // dip: fully out before the next scene starts
           window.__timelines["hook"] = tl;
         })();
       </script>

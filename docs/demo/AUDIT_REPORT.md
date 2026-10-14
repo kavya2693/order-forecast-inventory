@@ -2,9 +2,9 @@
 
 **Repository:** https://github.com/kavya2693/order-forecast-inventory  
 **Numbers taken from commit:** `7b2e475` (outputs last changed in `7b2e475 (2026-10-14 11:46:31 +0400)`)  
-**Video:** `docs/demo/demo.mp4` (86.0 s, 1920x1080, 30 fps, silent)  
-**Generated:** 2026-10-14 14:41  
-**Automated checks:** 49 pass · 0 fail · 1 manual (of 50 figures)
+**Video:** `docs/demo/demo.mp4` (88.8 s, 1920x1080, 30 fps, silent)  
+**Generated:** 2026-10-14 18:55  
+**Automated checks:** 51 pass · 0 fail · 1 manual (of 52 figures)
 
 ## How to use this report
 
@@ -33,7 +33,7 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 | F-04 | 8,955 customer-SKU lines | 02 | `outputs/metrics.json; recomputed from data/raw/sales_orders.parquet` | source_counts.pairs | distinct (customer, SKU) over non-cancelled order lines | direct | ✓ verified |
 | F-05 | Weekly, two weeks out | 02 | `src/order_forecast/config.py:25` | HORIZONS = (1, 2) | - | direct | ✓ verified |
 | F-06 | 60% of line-weeks: no order | 02 | `outputs/data_profile.json; recomputed from data/raw/sales_orders.parquet` | share_zero_line_weeks = 0.5966 | 1 - (line-weeks with an order / panel rows) = 0.5966, shown as 60% | derived | ✓ verified |
-| F-07 | 3 systems joined in SQL · stock costs 25% a year | 02 | `src/order_forecast/pipeline.py:12 (RAW_TABLES); config.py:32` | sales_orders, shipments, field_app_events; ANNUAL_HOLDING_RATE = 0.25 | - | direct | ✓ verified |
+| F-07 | 3 systems joined in SQL · holding stock costs 25% a year | 02 | `src/order_forecast/pipeline.py:12 (RAW_TABLES); config.py:32` | sales_orders, shipments, field_app_events; ANNUAL_HOLDING_RATE = 0.25 | - | direct | ✓ verified |
 | F-08 | 3 SOURCES → JOIN → FORECAST → SAFETY STOCK → ORDER-UP-TO → ORDER LIST | 03 | `src/order_forecast/` | sql/*.sql, models.py, inventory.py | - | direct | ✓ verified |
 | F-09 | tune it to hit 98% | 03 | `src/order_forecast/inventory.py:72-97 (bisection); config.py:34` | z_for_fill_rate, TARGET_FILL_RATE = 0.98 | - | direct | ✓ verified |
 | F-10 | 98% of orders filled | 03 | `outputs/inventory.csv` | method=lgbm_two_stage, fill_rate_matched | - | direct | ✓ verified |
@@ -43,7 +43,7 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 | F-14 | 26 held-out weeks | 04, 08 | `outputs/metrics.json` | split.test_weeks | - | direct | ✓ verified |
 | F-15 | two bars | 04 | `outputs/inventory.csv avg_inventory_value_matched; compositions/explainer.html` | 969,484 vs 516,188 | 128 = round(240 x 516,188 / 969,484) | derived | ✓ verified |
 | F-16 | −46.8% holding cost vs ETS | 04 | `outputs/inventory.csv` | holding_cost_matched_fill | (129,047 - 242,371) / 242,371 x 100 = -46.76% | derived | ✓ verified |
-| F-17 | The top accuracy score picked a costlier model | 04, 09 | `outputs/accuracy.csv (h=1 accuracy_pair); outputs/inventory.csv` | lgbm_point has max accuracy_pair and higher holding cost than the other boosted models | argmax accuracy = lgbm_point; its holding cost > each of the other three boosted models | derived | ✓ verified |
+| F-17 | The accuracy leader costs the most. | 09 | `outputs/accuracy.csv (h=1 accuracy_pair); outputs/inventory.csv` | lgbm_point has max accuracy_pair and higher holding cost than the other boosted models | argmax accuracy = lgbm_point; its holding cost > each of the other three boosted models | derived | ✓ verified |
 | F-18 | 604,527 lines · 592,904 · 279,330 | 05 | `outputs/metrics.json source_counts` | raw_order_lines, shipments, raw_app_events | - | direct | ✓ verified |
 | F-19 | −11,623 cancelled lines | 05 | `outputs/metrics.json; data/raw/sales_orders.parquet status` | raw_order_lines - clean_order_lines | 604,527 - 592,904 = 11,623 (all status = cancelled) | derived | ✓ verified |
 | F-20 | −8,136 API retries | 05 | `outputs/metrics.json` | raw_app_events - dedup_app_events | 279,330 - 271,194 = 8,136 | derived | ✓ verified |
@@ -70,15 +70,17 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 | F-41 | 0.808 · ETS 0.704 | 08 | `outputs/accuracy.csv` | horizon=1, accuracy_sku | - | direct | ✓ verified |
 | F-42 | 97.1% · ETS 94.8% | 08 | `outputs/inventory.csv` | fill_rate_fixed_z | x 100 | direct | ✓ verified |
 | F-43 | 0.830 · 0.582 | 08 | `outputs/order_auc.csv` | scorer rows | - | direct | ✓ verified |
-| F-44 | 123,907 · 124,338 · 129,047 · 136,464 | 09 | `outputs/inventory.csv` | holding_cost_matched_fill | - | direct | ✓ verified |
-| F-45 | 0.118 · 0.120 · 0.121 · 0.214 | 09 | `outputs/accuracy.csv` | horizon=1, accuracy_pair | - | direct | ✓ verified |
-| F-46 | 826 / 829 / 860 / 910 px | 09 | `compositions/s06-twist.html` | inline widths | round(cost / 150) | derived | ✓ verified |
-| F-47 | One Tweedie model tied it; it stays only because P(order) is a number a rep can act on | 09 | `README 'The result' point 3` | README | - | direct | ✓ verified |
+| F-44 | 123,907 · 129,047 · 136,464 | 09 | `outputs/inventory.csv` | holding_cost_matched_fill | - | direct | ✓ verified |
+| F-45 | 0.214 · 0.121 · 0.118 | 09 | `outputs/accuracy.csv` | horizon=1, accuracy_pair | - | direct | ✓ verified |
+| F-46 | 189 / 106 / 104 px · 195 / 203 / 214 px | 09 | `compositions/s06-twist.html` | inline widths | round(acc x 880); round(cost x 220 / 140,000) | derived | ✓ verified |
+| F-47 | orders 14% too little in total | 09 | `outputs/accuracy.csv` | horizon=1, method=lgbm_point, bias_pair = -0.1406 | bias = (sum forecast - sum actual) / sum actual (metrics.bias); -0.1406 shown as 14% too little | derived | ✓ verified |
+| F-51 | The code gives each forecast the buffer that fills 98%, then compares cost. | 09 | `src/order_forecast/inventory.py (z_for_fill_rate); src/order_forecast/evaluate.py (inventory_table, holding_cost_matched_fill); config.py TARGET_FILL_RATE; tests/test_inventory.py::test_matched_z_reaches_the_target_fill_rate; docs/adr/0001` | - | - | direct | ✓ verified |
+| F-52 | 129,047 vs ETS (smoothed history) 242,371 · −46.8% | 09 | `outputs/inventory.csv` | holding_cost_matched_fill | (129,047 - 242,371) / 242,371 x 100 = -46.76% | derived | ✓ verified |
 | F-48 | MIT | 10 | `LICENSE line 1` | - | - | direct | ✓ verified |
 | F-49 | LightGBM · XGBoost · DuckDB SQL · Python | 10 | `pyproject.toml dependencies` | lightgbm, xgboost, duckdb | - | direct | ✓ verified |
 | F-50 | $ make run # 400 customers × 150 SKUs, ~9 min | 10 | `Makefile; outputs/metrics.json runtime_seconds` | 522.6 s | 522.6 / 60 = 8.7 min | derived | ✓ verified |
 
-## 2. Automated check run (2026-10-14 14:41)
+## 2. Automated check run (2026-10-14 18:55)
 
 | ID | Expected on slide | Recomputed from repo | Result |
 |---|---|---|---|
@@ -125,10 +127,12 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 | F-41 | 0.808 · 0.704 | 0.808 · 0.704 | ✓ pass |
 | F-42 | 97.1% · 94.8% | 97.1% · 94.8% | ✓ pass |
 | F-43 | 0.830 · 0.582 | 0.830 · 0.582 | ✓ pass |
-| F-44 | 123,907 · 124,338 · 129,047 · 136,464 | 123,907 · 124,338 · 129,047 · 136,464 | ✓ pass |
-| F-45 | 0.118 · 0.120 · 0.121 · 0.214 | 0.118 · 0.120 · 0.121 · 0.214 | ✓ pass |
+| F-44 | 123,907 · 129,047 · 136,464 | 123,907 · 129,047 · 136,464 | ✓ pass |
+| F-45 | 0.214 · 0.121 · 0.118 | 0.214 · 0.121 · 0.118 | ✓ pass |
 | F-46 | true | true | ✓ pass |
-| F-47 | true | true | ✓ pass |
+| F-47 | 14% | 14% | ✓ pass |
+| F-51 | true | true | ✓ pass |
+| F-52 | 129,047 · 242,371 · -46.8% | 129,047 · 242,371 · -46.8% | ✓ pass |
 | F-48 | true | true | ✓ pass |
 | F-49 | true | true | ✓ pass |
 | F-50 | ~9 min | ~9 min | ✓ pass |
@@ -159,6 +163,7 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 
 > 01 · THE INDUSTRY  
 > Every Friday, someone decides how much stock to buy.  
+> Who orders stock for many customers every week, and the four problems they run into.  
 > WHO LIVES WITH THIS · Wholesale & B2B distributors · Food & grocery wholesale · Consumer-goods supply  
 > 01 Customer orders are lumpy — A line orders some weeks and skips others  
 > 02 The useful signals sit in other systems — ERP, warehouse and the reps' app are never joined  
@@ -189,8 +194,10 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 **On-screen text (verbatim)**
 
 > 02 · THIS PROJECT  
+> The project in one line: forecast every customer's weekly order for every product.  
 > 400 customers × 150 SKUs. 8,955 customer-SKU lines. Weekly, two weeks out.  
-> 60% of line-weeks: no order · 3 systems joined in SQL · stock costs 25% a year  
+> 60% of line-weeks: no order · 3 systems joined in SQL · holding stock costs 25% a year  
+> SKU = one product. Line = one customer buying one SKU. Holding cost = money tied up in stock, per year.  
 
 **Figures on this slide**
 
@@ -200,7 +207,7 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 | F-04 | 8,955 customer-SKU lines | `outputs/metrics.json; recomputed from data/raw/sales_orders.parquet` · source_counts.pairs | distinct (customer, SKU) over non-cancelled order lines | ✓ |
 | F-05 | Weekly, two weeks out | `src/order_forecast/config.py:25` · HORIZONS = (1, 2) | - | ✓ |
 | F-06 | 60% of line-weeks: no order | `outputs/data_profile.json; recomputed from data/raw/sales_orders.parquet` · share_zero_line_weeks = 0.5966 | 1 - (line-weeks with an order / panel rows) = 0.5966, shown as 60% | ✓ |
-| F-07 | 3 systems joined in SQL · stock costs 25% a year | `src/order_forecast/pipeline.py:12 (RAW_TABLES); config.py:32` · sales_orders, shipments, field_app_events; ANNUAL_HOLDING_RATE = 0.25 | - | ✓ |
+| F-07 | 3 systems joined in SQL · holding stock costs 25% a year | `src/order_forecast/pipeline.py:12 (RAW_TABLES); config.py:32` · sales_orders, shipments, field_app_events; ANNUAL_HOLDING_RATE = 0.25 | - | ✓ |
 
 **Assumptions:** A-01, A-03
 
@@ -219,6 +226,7 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 
 > 03 · HOW IT WORKS  
 > From orders to a stock order  
+> Read left to right: join three systems, forecast each customer, size a safety buffer, then buy.  
 > [SQL · DUCKDB: 3 SOURCES orders, deliveries, reps' app → JOIN one table per line per week] → [EVERY WEEK: FORECAST will they order? how much? → SAFETY STOCK sized from past misses → ORDER-UP-TO how much to buy per SKU] → ORDER LIST ✓ 98% of orders filled ✓ half the stock cost ✓ every SKU, weekly  
 > tune it to hit 98% (loop over safety stock)  
 
@@ -249,11 +257,12 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 
 > 04 · THE KEY IDEA  
 > Scored by the stock it needs  
+> Two forecasts, both held to 98% of orders filled. Less stock on the shelf is better.  
 > Each forecast's own past misses size its buffer — a less informed forecast needs more spare stock  
 > Every forecast must fill 98% of orders — the same service, on 26 held-out weeks  
 > The winner holds the least stock — not the one with the best accuracy score  
 > SAME 98% FILL · STOCK ON THE SHELF: Smoothed history vs Joined-signals model, both '98% filled'. Same service. The better-informed forecast needs about half the stock.  
-> Replay, 26 test weeks: −46.8% holding cost vs ETS at 98% fill. The top accuracy score picked a costlier model.  
+> Real replay, 26 test weeks: −46.8% holding cost vs ETS (smoothed history) at 98% fill.  
 
 **Figures on this slide**
 
@@ -263,7 +272,6 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 | F-14 | 26 held-out weeks | `outputs/metrics.json` · split.test_weeks | - | ✓ |
 | F-15 | two bars | `outputs/inventory.csv avg_inventory_value_matched; compositions/explainer.html` · 969,484 vs 516,188 | 128 = round(240 x 516,188 / 969,484) | ✓ |
 | F-16 | −46.8% holding cost vs ETS | `outputs/inventory.csv` · holding_cost_matched_fill | (129,047 - 242,371) / 242,371 x 100 = -46.76% | ✓ |
-| F-17 | The top accuracy score picked a costlier model | `outputs/accuracy.csv (h=1 accuracy_pair); outputs/inventory.csv` · lgbm_point has max accuracy_pair and higher holding cost than the other boosted models | argmax accuracy = lgbm_point; its holding cost > each of the other three boosted models | ✓ |
 
 **Assumptions:** A-03, A-04, A-05, A-06
 
@@ -271,7 +279,7 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 
 - 'Smoothed history' = ETS; 'Joined-signals model' = two-stage LightGBM. Bar heights are proportional to average stock value at 98% fill (F-15); the bars carry no numbers on screen.
 
-**To change this slide:** Markup under #ex-b in compositions/explainer.html; footnote figures are F-16 and F-17. (project folder `docs/demo/source`).
+**To change this slide:** Markup under #ex-b in compositions/explainer.html; footnote figure is F-16. (project folder `docs/demo/source`).
 
 ### Slide 05: Architecture  
 *26.0-40.8 s · composition `compositions/s03-architecture.html`*
@@ -282,11 +290,12 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 
 > 05 · ARCHITECTURE  
 > Three sources, one SQL panel, one stock decision.  
+> Each box is a file in the repo. Data flows left to right into one weekly stock order; the band below scores it.  
 > ① SOURCES data.py: sales_orders (ERP · 604,527 lines), shipments (WMS/TMS · 592,904), field_app_events (reps' app · 279,330), customers · skus (400 · 150 rows) → parquet  
-> ② SQL FEATURE LAYER pipeline.py · DuckDB: 01_staging.sql Clean + dedupe (−11,623 cancelled lines, −8,136 API retries) → 02_panel.sql Weekly panel (zero weeks made explicit) → 03_features.sql Features as of week t (lags · app · logistics) → 1 row / line / week → features (1,337,363 line-weeks) → panel  
-> ③ MODELS: models.py · TwoStage Two-stage forecast P(order) × E[qty|order], LightGBM · XGBoost, 1 and 2 weeks ahead, fit on 916,478 rows; models.py Tweedie, one stage (challenger); baseline.py ETS per line + 4-week moving avg → F₁, F₂  
-> ④ DECISION inventory.py Order-up-to policy S = F₁ + F₂ + z·σ, Σ lines → SKU · 1-wk lead, ◆ z_for_fill_rate(), bisect z until 98% fill → order qty → cli.py outputs/ (inventory.csv, accuracy.csv, results.md); z = NaN → evaluate.py fixed z = 1.65 (fallback)  
-> ⑤ evaluate.py · metrics.py Backtest: train | val 13 wk | test 26 wk · 1 − WAPE · bias · fill · holding cost · ablation ×3 · 523 s full run; test forecasts in, σ / SKU fed back to the policy  
+> ② SQL FEATURE LAYER pipeline.py · DuckDB: 01_staging.sql Clean + dedupe (−11,623 cancelled, −8,136 API retries) → 02_panel.sql Weekly panel (every zero week kept) → 03_features.sql Features as of week t (lags · app · logistics) → 1 row / line / week → features (1,337,363 line-weeks) → panel  
+> ③ MODELS: models.py · TwoStage Two-stage forecast P(order) × E[qty], order? × how many, LightGBM · XGBoost, 1 and 2 weeks ahead, fit on 916,478 rows; models.py Tweedie, one stage (challenger); baseline.py ETS per line + 4-week moving avg → F₁, F₂  
+> ④ DECISION inventory.py Order-up-to policy S = F₁ + F₂ + z·σ, per SKU · 1-week lead, ◆ z_for_fill_rate(), raise buffer to 98% fill → order qty → cli.py outputs/ (inventory.csv, accuracy.csv, results.md); if no z → evaluate.py fixed z = 1.65 (fallback)  
+> ⑤ evaluate.py · metrics.py Backtest: train | val 13 wk | test 26 wk · accuracy · bias · fill · holding cost · 3 source tests · 523 s full run; test forecasts in, error / SKU fed back to the policy  
 > Legend: data · models · decision · evaluation · batch hand-off · feedback · fallback; then 'critical path: orders → SQL → features → two-stage → policy → outputs'  
 
 **Figures on this slide**
@@ -327,8 +336,8 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 **On-screen text (verbatim)**
 
 > 06 · THE SYSTEM RUNNING  
-> One SKU, 26 held-out weeks: who saw the orders coming? · SKU S0032 · all customer lines summed · forecast made one week ahead · bars = what customers ordered, lines = two-stage LightGBM, ETS  
-> All 150 SKUs, both tuned to fill 98%: stock on the shelf. · value of stock after each week's orders, test weeks after warm-up  
+> One SKU, 26 held-out weeks: who saw the orders coming? · One product (SKU S0032), all customers added up, forecast one week ahead. The line closer to the bars is better. · bars = what customers ordered, lines = two-stage LightGBM, ETS  
+> All 150 SKUs, both tuned to fill 98%: stock on the shelf. · Value of stock held each week, both forecasts at the same 98% fill. Lower is better: less cash on the shelf.  
 > AVERAGE STOCK VALUE 969,484 → 516,188 · −46.8% · ETS 969,484 · two-stage 516,188  
 
 **Figures on this slide**
@@ -358,15 +367,16 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 
 > 07 · END-USER VALUE  
 > What the planner gets  
-> REPLENISHMENT ORDER LIST · FRI 2025-09-26 · ARRIVES MON 2025-10-06 — columns SKU, CATEGORY, ON HAND, IN TRANSIT, NEED 2 WK, SAFETY, ORDER, BUYERS  
+> One Friday's real order list from the repo. ORDER = units to buy now; a green tick = every customer order filled.  
+> REPLENISHMENT ORDER LIST · FRI 2025-09-26 · ARRIVES MON 2025-10-06 — columns SKU, CATEGORY, ON HAND, INBOUND, NEED 2 WK, SAFETY, ORDER, BUYERS  
 > S0108 personal care 630 2,116 4,251 +557 2,063 93 / 211  
 > S0014 household 1,269 2,855 5,330 +1,598 2,804 100 / 241  
 > S0005 frozen 619 1,768 3,529 +595 1,737 46 / 106  
 > S0066 beverages 387 1,997 3,521 +480 1,619 66 / 180  
 > S0131 snacks 464 1,068 2,139 +558 1,166 58 / 148  
 > S0044 dry grocery 1,289 1,841 3,833 +663 1,366 107 / 271  
-> + 144 more SKUs · BUYERS = customers likely to order next week, Σ P(order) · ✓ 145 of 150 SKUs to order · 814,648 at cost · stocked for 98% fill  
-> PLANNER → WAREHOUSE · on hand · in transit · this order · S · arrives Oct 6 · ✓ week of Sep 29: every order on these 6 SKUs filled  
+> + 144 more SKUs · BUYERS = likely buyers next week / all buyers · ✓ 145 of 150 SKUs to order · 814,648 at cost · stocked for 98% fill  
+> PLANNER → WAREHOUSE · on hand · in transit · this order · S · arrives Oct 6 · ✓ week of Sep 29: all orders on these 6 filled  
 > Every Friday the planner gets an order for every SKU, sized to fill 98% of orders with about half the stock.  
 
 **Figures on this slide**
@@ -400,11 +410,12 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 
 > 08 · RESULTS · 26 HELD-OUT WEEKS  
 > Half the carrying cost, at the same 98% fill.  
+> Two-stage LightGBM vs ETS, the smoothed-history baseline. Cost: lower is better; the other three: higher is better.  
 > INVENTORY −46.8% holding cost / yr at 98% fill · 242,371 → 129,047  
-> FORECAST 0.808 SKU-level accuracy, 1 − WAPE · ETS 0.704  
-> INVENTORY 97.1% orders filled at the textbook z = 1.65 · ETS 94.8%  
-> FORECAST 0.830 AUC: will this line order next week? · rank by ETS level 0.582  
-> two-stage LightGBM vs ETS · 400 customers · 150 SKUs · one backtest split, so no interval  
+> FORECAST 0.808 accuracy per SKU, a week ahead · ETS 0.704  
+> INVENTORY 97.1% orders filled with the textbook buffer (z = 1.65) · ETS 94.8%  
+> FORECAST 0.830 spots next week's buyers (AUC) · rank by ETS level 0.582  
+> Accuracy = 1 − error as a share of orders. AUC: 0.5 = a coin flip, 1 = perfect. One backtest split, so no error bars.  
 
 **Figures on this slide**
 
@@ -426,39 +437,43 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 
 **To change this slide:** The stats array and card text in compositions/s05-results.html. (project folder `docs/demo/source`).
 
-### Slide 09: What didn't win  
-*75.8-82.0 s · composition `compositions/s06-twist.html`*
+### Slide 09: Lesson and fix  
+*75.8-84.8 s · composition `compositions/s06-twist.html`*
 
 ![Slide 09](slides/slide-09.jpg)
 
 **On-screen text (verbatim)**
 
-> 09 · WHAT DIDN'T WIN  
-> The best accuracy score picked a costlier model.  
-> Holding cost per year to reach 98% fill (line-level accuracy under each name)  
-> Tweedie, one stage (accuracy 0.118) 123,907 · XGBoost two-stage (0.120) 124,338 · LightGBM two-stage (0.121) 129,047 · "Point" forecast (best accuracy 0.214) 136,464  
-> Also: the two-stage split did not earn its keep. One Tweedie model tied it; it stays only because P(order) is a number a rep can act on.  
+> 09 · LESSON AND FIX  
+> Accuracy rewards guessing zero. So I score the stock.  
+> The same three forecasts, one week ahead, scored two ways. Accuracy: higher is better. Stock cost: lower is better.  
+> THE LESSON · Guessing zero wins on line accuracy · Line accuracy: 1 − error share, per customer per SKU · Point forecast (guesses zero if unsure) 0.214 TRAP · LightGBM (two-stage model) 0.121 · Tweedie (one-stage model) 0.118 · Picking on this score would choose a forecast that orders 14% too little in total.  
+> THE FIX, IN THE REPO · Score each forecast by its stock bill · Holding cost a year, each buffered to fill 98% · Tweedie (one-stage model) 123,907 · LightGBM (two-stage model) 129,047 · Point forecast (the accuracy leader) 136,464 LAST · The code gives each forecast the buffer that fills 98%, then compares cost. The accuracy leader costs the most.  
+> PAYOFF · Holding cost a year at 98% fill: LightGBM two-stage 129,047 vs ETS (smoothed history) 242,371 · −46.8%  
 
 **Figures on this slide**
 
 | ID | Shown | Source · key | Calculation | Check |
 |---|---|---|---|---|
-| F-17 | The top accuracy score picked a costlier model | `outputs/accuracy.csv (h=1 accuracy_pair); outputs/inventory.csv` · lgbm_point has max accuracy_pair and higher holding cost than the other boosted models | argmax accuracy = lgbm_point; its holding cost > each of the other three boosted models | ✓ |
-| F-44 | 123,907 · 124,338 · 129,047 · 136,464 | `outputs/inventory.csv` · holding_cost_matched_fill | - | ✓ |
-| F-45 | 0.118 · 0.120 · 0.121 · 0.214 | `outputs/accuracy.csv` · horizon=1, accuracy_pair | - | ✓ |
-| F-46 | 826 / 829 / 860 / 910 px | `compositions/s06-twist.html` · inline widths | round(cost / 150) | ✓ |
-| F-47 | One Tweedie model tied it; it stays only because P(order) is a number a rep can act on | `README 'The result' point 3` · README | - | ✓ |
+| F-17 | The accuracy leader costs the most. | `outputs/accuracy.csv (h=1 accuracy_pair); outputs/inventory.csv` · lgbm_point has max accuracy_pair and higher holding cost than the other boosted models | argmax accuracy = lgbm_point; its holding cost > each of the other three boosted models | ✓ |
+| F-44 | 123,907 · 129,047 · 136,464 | `outputs/inventory.csv` · holding_cost_matched_fill | - | ✓ |
+| F-45 | 0.214 · 0.121 · 0.118 | `outputs/accuracy.csv` · horizon=1, accuracy_pair | - | ✓ |
+| F-46 | 189 / 106 / 104 px · 195 / 203 / 214 px | `compositions/s06-twist.html` · inline widths | round(acc x 880); round(cost x 220 / 140,000) | ✓ |
+| F-47 | orders 14% too little in total | `outputs/accuracy.csv` · horizon=1, method=lgbm_point, bias_pair = -0.1406 | bias = (sum forecast - sum actual) / sum actual (metrics.bias); -0.1406 shown as 14% too little | ✓ |
+| F-51 | The code gives each forecast the buffer that fills 98%, then compares cost. | `src/order_forecast/inventory.py (z_for_fill_rate); src/order_forecast/evaluate.py (inventory_table, holding_cost_matched_fill); config.py TARGET_FILL_RATE; tests/test_inventory.py::test_matched_z_reaches_the_target_fill_rate; docs/adr/0001` · - | - | ✓ |
+| F-52 | 129,047 vs ETS (smoothed history) 242,371 · −46.8% | `outputs/inventory.csv` · holding_cost_matched_fill | (129,047 - 242,371) / 242,371 x 100 = -46.76% | ✓ |
 
-**Assumptions:** A-03, A-05, A-06, A-07, A-09
+**Assumptions:** A-03, A-04, A-05, A-06, A-07, A-09
 
 **Illustrative, not data:**
 
-- Bar lengths: 1,000 px track = 150,000 (F-46).
+- Bars: grey = options being compared, mint = the forecasts the stock score keeps; coral only on the TRAP label. Each panel has its own scale because the units differ (F-46).
+- The 'point' forecast is the repo's diagnostic variant (zero unless P(order) >= 0.5, evaluate.py), kept to show what line accuracy rewards; 'guesses zero if unsure' is a plain reading of that rule.
 
-**To change this slide:** Rows #twist-r1..r4 (bar widths are inline styles) in compositions/s06-twist.html. (project folder `docs/demo/source`).
+**To change this slide:** Panels #twist-left / #twist-right and the payoff strip in compositions/s06-twist.html; bar widths are inline styles (F-46). (project folder `docs/demo/source`).
 
 ### Slide 10: End card  
-*81.6-86.0 s · composition `compositions/s07-end.html`*
+*84.4-88.8 s · composition `compositions/s07-end.html`*
 
 ![Slide 10](slides/slide-10.jpg)
 
@@ -469,6 +484,7 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 > github.com/kavya2693/order-forecast-inventory  
 > LightGBM · XGBoost · DuckDB SQL · Python  
 > $ make run   # 400 customers × 150 SKUs, ~9 min  
+> One command rebuilds every table the numbers in this video come from.  
 
 **Figures on this slide**
 
@@ -504,6 +520,8 @@ python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/fact
 - Line-level accuracy is low for every method (0.12 at one week, negative at two weeks); the result rests on summing to SKU level (README 'The result' point 1).
 - Slide 07's order list is a re-run of make run's code for two forecasters (A-08); the export asserts its inventory numbers equal outputs/inventory.csv before writing.
 - Money figures are in generated currency units (A-07).
+- Slide 09 no longer shows that the two-stage split only ties a single-stage Tweedie model (123,907 vs 129,047 a year at 98% fill; XGBoost two-stage 124,338), nor that it is kept because P(order) is a number a rep can act on. README 'At a glance' (What didn't win) and 'The result' still report both.
+- Slide 09 marks no single model PICKED: the three boosted mean forecasts tie within about 4% on holding cost (one split), so the right panel shows the two shown boosted rows in mint and the accuracy leader last. The repo's deciding number (holding cost at matched fill) is what rejects the point forecast.
 - Slide 01 statements are general industry knowledge (A-10).
 - The repo has no online serving, latency target or human approval step; the architecture shows a batch backtest with file outputs.
 

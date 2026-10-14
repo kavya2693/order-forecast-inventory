@@ -4,63 +4,129 @@
   <body>
     <template>
       <style>
+        /* 09 LESSON AND FIX: left = the finding with its evidence, right = what the repo does about it + the measured payoff.
+           Colour meaning: neutral grey bars for every option, coral only for the "trap" label, mint for the fix. */
         #twist-root { position: absolute; inset: 0; }
-        #twist-root .eyebrow { color: var(--c-risk); }
-        #twist-root .sub { position: absolute; left: 120px; top: 200px; font-size: 32px; color: var(--ink-soft); }
-        #twist-root .bars { position: absolute; left: 120px; top: 310px; width: 1680px; }
-        #twist-root .row { display: flex; align-items: center; height: 112px; }
-        #twist-root .who { width: 470px; font-size: 36px; font-weight: 700; color: var(--ink); }
-        #twist-root .who small { display: block; font-family: var(--mono); font-size: 22px; font-weight: 400; color: var(--ink-mute); }
-        #twist-root .track { position: relative; width: 1000px; height: 44px; border-radius: 8px; background: rgba(178, 191, 204, 0.08); }
-        #twist-root .fill { position: absolute; left: 0; top: 0; height: 44px; border-radius: 8px; background: var(--ink-mute); transform-origin: left center; }
-        #twist-root .val { width: 210px; text-align: right; font-family: var(--mono); font-size: 44px; font-weight: 700; color: var(--ink-soft); }
-        #twist-root .rule .fill { background: var(--c-eval); }
-        #twist-root .rule .val { color: var(--c-eval); }
-        #twist-root .xgb .fill { background: var(--c-model); }
-        #twist-root .xgb .val { color: var(--c-model); }
-        #twist-root .lr .fill { background: rgba(185, 162, 255, 0.55); }
-        #twist-root .pt .fill { background: var(--c-risk); }
-        #twist-root .pt .val { color: var(--c-risk); }
-        #twist-root .pt .who small { color: var(--c-risk); }
-        #twist-root .verdict {
-          position: absolute; left: 120px; top: 806px; width: 1680px; padding: 22px 28px; border-radius: 12px;
-          border: 2px solid rgba(255, 138, 115, 0.45); background: rgba(255, 138, 115, 0.07);
-          font-size: 30px; line-height: 1.4; color: var(--ink);
+        #twist-root .eyebrow { color: var(--c-opt); }
+        #twist-root .panel {
+          position: absolute; top: 262px; width: 820px; height: 560px; border-radius: 16px; border: 2px solid var(--line);
+          background: var(--panel); padding: 30px 36px 0;
         }
-        #twist-root .verdict b { color: var(--c-risk); }
+        #twist-root .panel.fix { border: 3px solid var(--c-opt); background: #0f2629; }
+        #twist-root .tag {
+          display: inline-block; font-family: var(--mono); font-size: 24px; font-weight: 700; letter-spacing: 0.12em;
+          padding: 4px 14px; border-radius: 6px; color: #0a1119;
+        }
+        #twist-root .lesson .tag { background: var(--c-risk); }
+        #twist-root .fix .tag { background: var(--c-opt); }
+        #twist-root .head { margin-top: 18px; font-size: 34px; font-weight: 700; line-height: 1.2; color: var(--ink); }
+        #twist-root .metric { margin-top: 10px; font-size: 24px; font-weight: 500; color: var(--ink-soft); }
+        #twist-root .metric b { color: var(--ink); font-weight: 700; }
+        #twist-root .rows { margin-top: 22px; }
+        #twist-root .row { display: flex; align-items: center; height: 72px; }
+        #twist-root .who { flex: 0 0 270px; width: 270px; font-size: 28px; font-weight: 700; color: var(--ink); line-height: 1.1; }
+        #twist-root .who small { display: block; margin-top: 4px; font-size: 22px; font-weight: 500; color: var(--ink-soft); }
+        #twist-root .track { flex: 0 0 220px; position: relative; width: 220px; height: 30px; border-radius: 6px; background: rgba(200, 211, 222, 0.1); }
+        #twist-root .fill { position: absolute; left: 0; top: 0; height: 30px; border-radius: 6px; background: #6b7b8e; transform-origin: left center; }
+        #twist-root .val { flex: 0 0 156px; width: 156px; text-align: right; font-family: var(--mono); font-size: 31px; font-weight: 700; color: var(--ink); }
+        #twist-root .chip {
+          flex: 0 0 auto; margin-left: 14px; height: 34px; padding: 0 10px; border-radius: 6px; display: flex; align-items: center;
+          font-family: var(--mono); font-size: 22px; font-weight: 700; letter-spacing: 0.04em;
+        }
+        #twist-root .chip.trap { color: var(--c-risk); border: 2px solid var(--c-risk); }
+        #twist-root .chip.pick { color: #0a1119; background: var(--c-opt); }
+        #twist-root .chip.last { color: var(--ink-soft); border: 2px solid var(--ink-mute); }
+        #twist-root .row.win .fill { background: var(--c-opt); }
+        #twist-root .row.win .val { color: var(--c-opt); }
+        #twist-root .note {
+          position: absolute; left: 36px; right: 36px; bottom: 26px; padding-top: 16px; border-top: 2px solid var(--line);
+          font-size: 26px; line-height: 1.3; color: var(--ink-soft);
+        }
+        #twist-root .lesson .note em { font-style: normal; font-weight: 700; color: var(--c-risk); }
+        #twist-root .fix .note em { font-style: normal; font-weight: 700; color: var(--c-opt); }
+        #twist-root .arrow { position: absolute; left: 943px; top: 514px; width: 34px; height: 56px; }
+        #twist-root .payoff {
+          position: absolute; left: 120px; top: 848px; width: 1680px; height: 92px; padding: 0 30px; border-radius: 14px;
+          border: 2px solid rgba(63, 216, 168, 0.6); background: rgba(63, 216, 168, 0.08);
+          display: flex; align-items: center; gap: 20px; font-size: 27px; color: var(--ink); white-space: nowrap;
+        }
+        #twist-root .payoff .tag { background: var(--c-opt); flex: 0 0 auto; }
+        #twist-root .payoff b { color: var(--c-opt); font-family: var(--mono); }
+        #twist-root .payoff .base { font-family: var(--mono); font-weight: 700; color: var(--ink); }
+        #twist-root .payoff .soft { color: var(--ink-soft); }
       </style>
       <div id="twist-root" data-composition-id="twist" data-width="1920" data-height="1080">
         <div class="scene" id="twist-in">
-          <div class="eyebrow" data-layout-allow-overlap id="twist-eyebrow">09 · What didn't win</div>
-          <div class="scene-title" data-layout-allow-overlap id="twist-title">The best accuracy score picked a costlier model.</div>
-          <div class="sub" id="twist-sub">Holding cost per year to reach 98% fill (line-level accuracy under each name)</div>
-          <div class="bars">
-            <div class="row rule" id="twist-r1"><div class="who">Tweedie, one stage<small>accuracy 0.118</small></div>
-              <div class="track"><div class="fill" id="twist-b1" style="width: 826px"></div></div><div class="val">123,907</div></div>
-            <div class="row lr" id="twist-r2"><div class="who">XGBoost two-stage<small>accuracy 0.120</small></div>
-              <div class="track"><div class="fill" id="twist-b2" style="width: 829px"></div></div><div class="val">124,338</div></div>
-            <div class="row xgb" id="twist-r3"><div class="who">LightGBM two-stage<small>accuracy 0.121</small></div>
-              <div class="track"><div class="fill" id="twist-b3" style="width: 860px"></div></div><div class="val">129,047</div></div>
-            <div class="row pt" id="twist-r4"><div class="who">"Point" forecast<small>best accuracy 0.214</small></div>
-              <div class="track"><div class="fill" id="twist-b4" style="width: 910px"></div></div><div class="val">136,464</div></div>
+          <div class="eyebrow" data-layout-allow-overlap id="twist-eyebrow">09 · Lesson and fix</div>
+          <div class="scene-title" data-layout-allow-overlap id="twist-title">Accuracy rewards guessing zero. So I score the stock.</div>
+          <div class="scene-sub" id="twist-sub">The same three forecasts, one week ahead, scored two ways. Accuracy: higher is better. Stock cost: lower is better.</div>
+
+          <!-- each panel has its own scale (different units): left 0.25 accuracy = 220 px, right 140,000 a year = 220 px -->
+          <div class="panel lesson" id="twist-left" style="left: 120px">
+            <span class="tag">THE LESSON</span>
+            <div class="head">Guessing zero wins on line accuracy</div>
+            <div class="metric"><b>Line accuracy</b>: 1 − error share, per customer per SKU</div>
+            <div class="rows">
+              <div class="row" id="twist-l1"><div class="who">Point forecast<small>guesses zero if unsure</small></div>
+                <div class="track"><div class="fill" id="twist-lb1" style="width: 189px"></div></div><div class="val">0.214</div><span class="chip trap">TRAP</span></div>
+              <div class="row" id="twist-l2"><div class="who">LightGBM<small>two-stage model</small></div>
+                <div class="track"><div class="fill" id="twist-lb2" style="width: 106px"></div></div><div class="val">0.121</div></div>
+              <div class="row" id="twist-l3"><div class="who">Tweedie<small>one-stage model</small></div>
+                <div class="track"><div class="fill" id="twist-lb3" style="width: 104px"></div></div><div class="val">0.118</div></div>
+            </div>
+            <div class="note" id="twist-lnote">Picking on this score would choose a forecast that orders <em>14% too little</em> in total.</div>
           </div>
-          <div class="verdict" id="twist-verdict"><b>Also:</b> the two-stage split did not earn its keep. One Tweedie model tied it; it stays only because P(order) is a number a rep can act on.</div>
+
+          <svg class="arrow" id="twist-arrow" viewBox="0 0 34 56" aria-hidden="true">
+            <path d="M6 6 L27 28 L6 50" fill="none" stroke="#3fd8a8" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+
+          <div class="panel fix" id="twist-right" style="left: 980px">
+            <span class="tag">THE FIX, IN THE REPO</span>
+            <div class="head">Score each forecast by its stock bill</div>
+            <div class="metric"><b>Holding cost</b> a year, each buffered to fill 98%</div>
+            <div class="rows">
+              <div class="row win" id="twist-r1"><div class="who">Tweedie<small>one-stage model</small></div>
+                <div class="track"><div class="fill" id="twist-rb1" style="width: 195px"></div></div><div class="val">123,907</div></div>
+              <div class="row win" id="twist-r2"><div class="who">LightGBM<small>two-stage model</small></div>
+                <div class="track"><div class="fill" id="twist-rb2" style="width: 203px"></div></div><div class="val">129,047</div></div>
+              <div class="row" id="twist-r3"><div class="who">Point forecast<small>the accuracy leader</small></div>
+                <div class="track"><div class="fill" id="twist-rb3" style="width: 214px"></div></div><div class="val">136,464</div><span class="chip last">LAST</span></div>
+            </div>
+            <div class="note" id="twist-rnote">The code gives each forecast the buffer that fills 98%, then compares cost. <em>The accuracy leader costs the most.</em></div>
+          </div>
+
+          <div class="payoff" id="twist-payoff"><span class="tag">PAYOFF</span>
+            <span>Holding cost a year at 98% fill: LightGBM two-stage <b>129,047</b> vs ETS (smoothed history) <span class="base">242,371</span></span>
+            <span class="soft">· <b>−46.8%</b></span></div>
         </div>
       </div>
       <script>
         (() => {
           const tl = gsap.timeline({ paused: true });
-          const D = 6.2;
+          const D = 9;
           tl.fromTo("#twist-in", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 0);
           tl.fromTo("#twist-eyebrow", { opacity: 0, x: -24 }, { opacity: 1, x: 0, duration: 0.5, ease: "power2.out" }, 0.1);
           tl.fromTo("#twist-title", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }, 0.2);
           tl.fromTo("#twist-sub", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 0.5);
-          [1, 2, 3, 4].forEach((n, i) => {
-            tl.fromTo("#twist-r" + n, { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.4, ease: "power2.out" }, 0.8 + i * 0.15);
-            tl.fromTo("#twist-b" + n, { scaleX: 0 }, { scaleX: 1, duration: 0.9, ease: "power3.out" }, 1.0 + i * 0.15);
+          // left: the lesson, with its evidence
+          tl.fromTo("#twist-left", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 0.8);
+          [1, 2, 3].forEach((n, i) => {
+            tl.fromTo("#twist-l" + n, { opacity: 0, x: -16 }, { opacity: 1, x: 0, duration: 0.4, ease: "power2.out" }, 1.2 + i * 0.15);
+            tl.fromTo("#twist-lb" + n, { scaleX: 0 }, { scaleX: 1, duration: 0.8, ease: "power3.out" }, 1.3 + i * 0.15);
           });
-          tl.fromTo("#twist-verdict", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 2.4);
-          tl.to("#twist-in", { opacity: 0, duration: 0.4, ease: "power2.in" }, D - 0.4);
+          tl.fromTo("#twist-lnote", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 2.3);
+          // right: the fix the repo implements, then its measured payoff
+          tl.fromTo("#twist-arrow", { opacity: 0, x: -12 }, { opacity: 1, x: 0, duration: 0.4, ease: "power2.out" }, 3.0);
+          tl.fromTo("#twist-right", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 3.2);
+          [1, 2, 3].forEach((n, i) => {
+            tl.fromTo("#twist-r" + n, { opacity: 0, x: -16 }, { opacity: 1, x: 0, duration: 0.4, ease: "power2.out" }, 3.6 + i * 0.15);
+            tl.fromTo("#twist-rb" + n, { scaleX: 0 }, { scaleX: 1, duration: 0.8, ease: "power3.out" }, 3.7 + i * 0.15);
+          });
+          tl.fromTo("#twist-rnote", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 4.7);
+          tl.fromTo("#twist-payoff", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 5.4);
+          // dip: fully out before the end card starts
+          tl.to("#twist-in", { opacity: 0, duration: 0.4, ease: "power2.in" }, D - 0.8);
           window.__timelines["twist"] = tl;
         })();
       </script>
