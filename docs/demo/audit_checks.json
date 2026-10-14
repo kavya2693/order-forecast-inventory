@@ -1,0 +1,406 @@
+{
+ "generated": "2026-10-14 14:41",
+ "commit": "7b2e475645cf52bef902c8ef2d00e693571debab",
+ "checks": [
+  {
+   "id": "F-01",
+   "shown": "3 industry chips",
+   "type": "general-knowledge",
+   "status": "manual",
+   "computed": "-",
+   "reason": "Context statement, not a repo output."
+  },
+  {
+   "id": "F-02",
+   "shown": "4 problem cards",
+   "type": "general-knowledge",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-03",
+   "shown": "400 customers x 150 SKUs",
+   "type": "direct",
+   "computed": "400 x 150",
+   "expect": "400 x 150",
+   "status": "pass"
+  },
+  {
+   "id": "F-04",
+   "shown": "8,955 customer-SKU lines",
+   "type": "direct",
+   "computed": "8,955",
+   "expect": "8,955",
+   "status": "pass"
+  },
+  {
+   "id": "F-05",
+   "shown": "Weekly, two weeks out",
+   "type": "direct",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-06",
+   "shown": "60% of line-weeks: no order",
+   "type": "derived",
+   "computed": "60%",
+   "expect": "60%",
+   "status": "pass"
+  },
+  {
+   "id": "F-07",
+   "shown": "3 systems joined in SQL \u00b7 stock costs 25% a year",
+   "type": "direct",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-08",
+   "shown": "3 SOURCES \u2192 JOIN \u2192 FORECAST \u2192 SAFETY STOCK \u2192 ORDER-UP-TO \u2192 ORDER LIST",
+   "type": "direct",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-09",
+   "shown": "tune it to hit 98%",
+   "type": "direct",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-10",
+   "shown": "98% of orders filled",
+   "type": "direct",
+   "computed": "98%",
+   "expect": "98%",
+   "status": "pass"
+  },
+  {
+   "id": "F-11",
+   "shown": "half the stock cost / about half the stock",
+   "type": "derived",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-12",
+   "shown": "every SKU, weekly",
+   "type": "direct",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-13",
+   "shown": "Each forecast's own past misses size its buffer",
+   "type": "direct",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-14",
+   "shown": "26 held-out weeks",
+   "type": "direct",
+   "computed": "26",
+   "expect": "26",
+   "status": "pass"
+  },
+  {
+   "id": "F-15",
+   "shown": "two bars",
+   "type": "derived",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-16",
+   "shown": "\u221246.8% holding cost vs ETS",
+   "type": "derived",
+   "computed": "-46.8%",
+   "expect": "-46.8%",
+   "status": "pass"
+  },
+  {
+   "id": "F-17",
+   "shown": "The top accuracy score picked a costlier model",
+   "type": "derived",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-18",
+   "shown": "604,527 lines \u00b7 592,904 \u00b7 279,330",
+   "type": "direct",
+   "computed": "604,527 \u00b7 592,904 \u00b7 279,330",
+   "expect": "604,527 \u00b7 592,904 \u00b7 279,330",
+   "status": "pass"
+  },
+  {
+   "id": "F-19",
+   "shown": "\u221211,623 cancelled lines",
+   "type": "derived",
+   "computed": "11,623",
+   "expect": "11,623",
+   "status": "pass"
+  },
+  {
+   "id": "F-20",
+   "shown": "\u22128,136 API retries",
+   "type": "derived",
+   "computed": "8,136",
+   "expect": "8,136",
+   "status": "pass"
+  },
+  {
+   "id": "F-21",
+   "shown": "1,337,363 line-weeks",
+   "type": "direct",
+   "computed": "1,337,363",
+   "expect": "1,337,363",
+   "status": "pass"
+  },
+  {
+   "id": "F-22",
+   "shown": "fit on 916,478 rows",
+   "type": "direct",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-23",
+   "shown": "data.py, pipeline.py, 01/02/03 *.sql, models.py TwoStage + Tweedie, baseline.py, inventory.py z_for_fill_rate(), cli.py outputs, evaluate.py, metrics.py",
+   "type": "direct",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-24",
+   "shown": "z = NaN \u2192 fixed z = 1.65 fallback",
+   "type": "direct",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-25",
+   "shown": "val 13 wk \u00b7 test 26 wk \u00b7 523 s full run",
+   "type": "direct",
+   "computed": "13 \u00b7 26 \u00b7 523",
+   "expect": "13 \u00b7 26 \u00b7 523",
+   "status": "pass"
+  },
+  {
+   "id": "F-26",
+   "shown": "ablation \u00d73",
+   "type": "direct",
+   "computed": "3",
+   "expect": "3",
+   "status": "pass"
+  },
+  {
+   "id": "F-27",
+   "shown": "1-wk lead \u00b7 98% fill \u00b7 horizons 1 and 2",
+   "type": "direct",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-28",
+   "shown": "SKU S0032 chart (26 bars, 2 lines)",
+   "type": "direct",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-29",
+   "shown": "ETS 969,484",
+   "type": "direct",
+   "computed": "969,484",
+   "expect": "969,484",
+   "status": "pass"
+  },
+  {
+   "id": "F-30",
+   "shown": "two-stage 516,188",
+   "type": "direct",
+   "computed": "516,188",
+   "expect": "516,188",
+   "status": "pass"
+  },
+  {
+   "id": "F-31",
+   "shown": "\u221246.8%",
+   "type": "derived",
+   "computed": "-46.8%",
+   "expect": "-46.8%",
+   "status": "pass"
+  },
+  {
+   "id": "F-32",
+   "shown": "two weekly lines, Jul-Dec",
+   "type": "derived",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-33",
+   "shown": "FRI 2025-09-26 \u00b7 ARRIVES MON 2025-10-06",
+   "type": "direct",
+   "computed": "2025-09-26 \u00b7 2025-10-06",
+   "expect": "2025-09-26 \u00b7 2025-10-06",
+   "status": "pass"
+  },
+  {
+   "id": "F-34",
+   "shown": "S0108, S0014, S0005, S0066, S0131, S0044",
+   "type": "direct",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-35",
+   "shown": "+ 144 more SKUs",
+   "type": "derived",
+   "computed": "144",
+   "expect": "144",
+   "status": "pass"
+  },
+  {
+   "id": "F-36",
+   "shown": "145 of 150 SKUs to order",
+   "type": "direct",
+   "computed": "145 of 150",
+   "expect": "145 of 150",
+   "status": "pass"
+  },
+  {
+   "id": "F-37",
+   "shown": "814,648 at cost",
+   "type": "direct",
+   "computed": "814,648",
+   "expect": "814,648",
+   "status": "pass"
+  },
+  {
+   "id": "F-38",
+   "shown": "week of Sep 29: every order on these 6 SKUs filled",
+   "type": "derived",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-39",
+   "shown": "242,371 \u2192 129,047",
+   "type": "direct",
+   "computed": "242,371 \u2192 129,047",
+   "expect": "242,371 \u2192 129,047",
+   "status": "pass"
+  },
+  {
+   "id": "F-40",
+   "shown": "\u221246.8%",
+   "type": "derived",
+   "computed": "-46.8%",
+   "expect": "-46.8%",
+   "status": "pass"
+  },
+  {
+   "id": "F-41",
+   "shown": "0.808 \u00b7 ETS 0.704",
+   "type": "direct",
+   "computed": "0.808 \u00b7 0.704",
+   "expect": "0.808 \u00b7 0.704",
+   "status": "pass"
+  },
+  {
+   "id": "F-42",
+   "shown": "97.1% \u00b7 ETS 94.8%",
+   "type": "direct",
+   "computed": "97.1% \u00b7 94.8%",
+   "expect": "97.1% \u00b7 94.8%",
+   "status": "pass"
+  },
+  {
+   "id": "F-43",
+   "shown": "0.830 \u00b7 0.582",
+   "type": "direct",
+   "computed": "0.830 \u00b7 0.582",
+   "expect": "0.830 \u00b7 0.582",
+   "status": "pass"
+  },
+  {
+   "id": "F-44",
+   "shown": "123,907 \u00b7 124,338 \u00b7 129,047 \u00b7 136,464",
+   "type": "direct",
+   "computed": "123,907 \u00b7 124,338 \u00b7 129,047 \u00b7 136,464",
+   "expect": "123,907 \u00b7 124,338 \u00b7 129,047 \u00b7 136,464",
+   "status": "pass"
+  },
+  {
+   "id": "F-45",
+   "shown": "0.118 \u00b7 0.120 \u00b7 0.121 \u00b7 0.214",
+   "type": "direct",
+   "computed": "0.118 \u00b7 0.120 \u00b7 0.121 \u00b7 0.214",
+   "expect": "0.118 \u00b7 0.120 \u00b7 0.121 \u00b7 0.214",
+   "status": "pass"
+  },
+  {
+   "id": "F-46",
+   "shown": "826 / 829 / 860 / 910 px",
+   "type": "derived",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-47",
+   "shown": "One Tweedie model tied it; it stays only because P(order) is a number a rep can act on",
+   "type": "direct",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-48",
+   "shown": "MIT",
+   "type": "direct",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-49",
+   "shown": "LightGBM \u00b7 XGBoost \u00b7 DuckDB SQL \u00b7 Python",
+   "type": "direct",
+   "computed": "true",
+   "expect": "true",
+   "status": "pass"
+  },
+  {
+   "id": "F-50",
+   "shown": "$ make run # 400 customers \u00d7 150 SKUs, ~9 min",
+   "type": "derived",
+   "computed": "~9 min",
+   "expect": "~9 min",
+   "status": "pass"
+  }
+ ]
+}

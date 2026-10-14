@@ -1,0 +1,250 @@
+<!doctype html>
+<html>
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template>
+      <style>
+        /* WHITE "END-USER VALUE" SLIDE: the artifact the user plans with (left) + a small 2D scene of the
+           person using it (right). Data is inlined by tools/inject_sheet.py between the SHEET markers. */
+        #value-root {
+          position: absolute; inset: 0;
+          --w-bg: #ffffff; --w-ink: #111827; --w-soft: #4b5563; --w-mute: #6b7280; --w-line: #d1d5db; --w-faint: #f3f4f6;
+          --w-data: #d97706; --w-model: #6d3cf0; --w-tools: #1f8fa8; --w-risk: #dc2b4a; --w-opt: #0f9f6e;
+          color: var(--w-ink); font-family: Inter, "Helvetica Neue", sans-serif;
+        }
+        #value-root .page { position: absolute; inset: 0; background: var(--w-bg); }
+        #value-root .edge { position: absolute; top: 0; width: 10px; height: 1080px; background: var(--w-model); }
+        #value-root .kick {
+          position: absolute; left: 120px; top: 84px; font-family: "JetBrains Mono", monospace; font-size: 24px;
+          font-weight: 700; letter-spacing: 0.18em; color: var(--w-mute);
+        }
+        #value-root .ttl {
+          position: absolute; left: 120px; top: 124px; font-family: Montserrat, sans-serif; font-weight: 900;
+          font-size: 68px; letter-spacing: -0.02em; white-space: nowrap;
+        }
+        #value-root .ttl em { font-style: normal; color: var(--w-model); }
+        #value-root .uline { position: absolute; left: 124px; top: 222px; width: 120px; height: 10px; border-radius: 5px; background: var(--w-model); transform-origin: left center; }
+
+        /* sheet */
+        #value-root .sheet {
+          position: absolute; left: 120px; top: 280px; width: 1060px; height: 640px; border: 3px solid var(--w-line);
+          border-radius: 24px; background: #fff; box-shadow: 0 18px 40px rgba(17, 24, 39, 0.08); overflow: hidden;
+        }
+        #value-root .sheet-head {
+          height: 72px; display: flex; align-items: center; justify-content: space-between; padding: 0 28px;
+          background: var(--w-ink); color: #fff; font-family: "JetBrains Mono", monospace; font-size: 22px; font-weight: 700; letter-spacing: 0.06em;
+        }
+        #value-root .sheet-head span:last-child { color: #c4b5fd; }
+        #value-root .row {
+          position: relative; display: flex; align-items: center; height: 64px; padding: 0 24px;
+          font-family: "JetBrains Mono", monospace; font-size: 21px; color: var(--w-ink); border-bottom: 2px solid var(--w-faint);
+        }
+        #value-root .row.hdr { height: 54px; font-size: 20px; font-weight: 700; letter-spacing: 0.02em; color: var(--w-mute); background: #fafafa; }
+        #value-root .row .tint { position: absolute; inset: 0; opacity: 0; }
+        #value-root .c { position: relative; white-space: nowrap; }
+        #value-root .c1 { width: 112px; display: flex; align-items: center; gap: 10px; font-weight: 700; }
+        #value-root .c1 i { display: block; width: 14px; height: 14px; border-radius: 4px; background: var(--w-line); }
+        #value-root .c2 { width: 150px; font-family: Inter, sans-serif; font-size: 21px; }
+        #value-root .row.hdr .c2 { font-family: "JetBrains Mono", monospace; font-size: 20px; }
+        #value-root .c3, #value-root .c4, #value-root .c5, #value-root .c6, #value-root .c7, #value-root .c8 { text-align: right; margin-left: 12px; }
+        #value-root .c3 { width: 104px; }
+        #value-root .c4 { width: 134px; }
+        #value-root .c5 { width: 130px; }
+        #value-root .c6 { width: 104px; color: var(--w-soft); }
+        #value-root .c7 { width: 116px; font-weight: 700; color: var(--w-opt); }
+        #value-root .row.hdr .c6 { color: var(--w-mute); }
+        #value-root .row.hdr .c7 { color: var(--w-opt); }
+        #value-root .c8 { width: 136px; color: var(--w-model); }
+        #value-root .more { padding: 14px 28px 0; font-family: "JetBrains Mono", monospace; font-size: 20px; line-height: 1.4; color: var(--w-mute); }
+        #value-root .totals {
+          position: absolute; left: 0; bottom: 0; width: 100%; height: 66px; display: flex; align-items: center; gap: 14px; padding: 0 28px;
+          background: #ecfdf5; border-top: 2px solid #a7f3d0; font-size: 23px; font-weight: 700; color: #065f46; white-space: nowrap;
+        }
+        #value-root .totals b { display: block; width: 28px; height: 28px; border-radius: 50%; background: var(--w-opt); position: relative; flex: 0 0 auto; }
+        #value-root .totals svg { position: absolute; left: 6px; top: 6px; width: 16px; height: 16px; }
+
+        /* scene */
+        #value-root .scene-lab { position: absolute; font-family: "JetBrains Mono", monospace; font-size: 20px; font-weight: 700; letter-spacing: 0.12em; color: var(--w-mute); white-space: nowrap; }
+        #value-root .floor {
+          position: absolute; left: 1220px; top: 420px; width: 600px; height: 500px; border-radius: 24px; border: 3px solid var(--w-line);
+          background-color: #fbfbfc;
+        }
+        #value-root .key { position: absolute; left: 1244px; top: 436px; display: flex; gap: 18px; font-family: "JetBrains Mono", monospace; font-size: 20px; color: var(--w-soft); white-space: nowrap; }
+        #value-root .key span { display: flex; align-items: center; gap: 7px; }
+        #value-root .key i { display: block; width: 14px; height: 14px; border-radius: 3px; }
+        #value-root svg.layer { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: visible; }
+        #value-root .note { position: absolute; left: 1244px; top: 874px; font-size: 21px; font-weight: 700; color: var(--w-opt); white-space: nowrap; }
+        #value-root .caption {
+          position: absolute; left: 120px; top: 952px; width: 1700px; font-size: 30px; font-weight: 700; color: var(--w-ink);
+        }
+        #value-root .caption span { color: var(--w-model); }
+      </style>
+
+      <div id="value-root" data-composition-id="value" data-width="1920" data-height="1080">
+        <div class="page" id="va-page">
+          <div class="kick" id="va-kick">07 · END-USER VALUE</div>
+          <div class="ttl" id="va-ttl">What the <em>planner</em> gets</div>
+          <div class="uline" id="va-ul"></div>
+
+          <div class="sheet" id="va-sheet">
+            <div class="sheet-head"><span id="va-head-l">REPLENISHMENT ORDER LIST</span><span id="va-head-r"></span></div>
+            <div class="row hdr" id="va-hdr">
+              <div class="c c1">SKU</div><div class="c c2">CATEGORY</div><div class="c c3">ON HAND</div><div class="c c4">IN TRANSIT</div>
+              <div class="c c5">NEED 2 WK</div><div class="c c6">SAFETY</div><div class="c c7">ORDER</div><div class="c c8">BUYERS</div>
+            </div>
+            <div id="va-rows"></div>
+            <div class="more" id="va-more"></div>
+            <div class="totals" id="va-totals"></div>
+          </div>
+
+          <div class="scene-lab" id="va-lab" style="left: 1220px; top: 280px">PLANNER → WAREHOUSE</div>
+          <div class="floor" id="va-floor"></div>
+          <div class="key" id="va-key">
+            <span><i style="background: #9ca3af"></i>on hand</span><span><i style="background: #d1d5db"></i>in transit</span>
+            <span><i style="background: #0f9f6e"></i>this order</span>
+          </div>
+          <svg class="layer" id="va-svg" viewBox="0 0 1920 1080"></svg>
+          <div class="note" id="va-note"></div>
+
+          <div class="caption" id="va-caption">Every Friday the planner gets an order for every SKU, sized to fill 98% of orders with <span>about half the stock</span>.</div>
+        </div>
+        <div class="edge" id="va-edge"></div>
+      </div>
+
+      <script>
+        (() => {
+          /* SHEET:BEGIN */ const SHEET = {"friday":"2025-09-26","week_start":"2025-09-22","arrives":"2025-10-06","next_week":"2025-09-29","n_skus":150,"n_to_order":145,"order_value":814648.0,"z":2.23,"rows":[{"sku":"S0108","category":"personal_care","on_hand":629.8,"in_transit":2115.7,"forecast_2wk":4251.4,"safety":557.4,"order_qty":2063.3,"exp_customer_orders":93.23,"customer_lines":211,"next_week_demand":2340.0},{"sku":"S0014","category":"household","on_hand":1269.2,"in_transit":2854.7,"forecast_2wk":5330.1,"safety":1597.8,"order_qty":2804.1,"exp_customer_orders":99.6,"customer_lines":241,"next_week_demand":2562.0},{"sku":"S0005","category":"frozen","on_hand":619.1,"in_transit":1767.5,"forecast_2wk":3528.5,"safety":594.8,"order_qty":1736.8,"exp_customer_orders":46.22,"customer_lines":106,"next_week_demand":1464.0},{"sku":"S0066","category":"beverages","on_hand":386.5,"in_transit":1996.5,"forecast_2wk":3521.4,"safety":480.0,"order_qty":1618.5,"exp_customer_orders":66.01,"customer_lines":180,"next_week_demand":1596.0},{"sku":"S0131","category":"snacks","on_hand":463.5,"in_transit":1068.1,"forecast_2wk":2139.1,"safety":558.4,"order_qty":1165.9,"exp_customer_orders":58.12,"customer_lines":148,"next_week_demand":836.0},{"sku":"S0044","category":"dry_grocery","on_hand":1288.9,"in_transit":1841.2,"forecast_2wk":3832.9,"safety":663.0,"order_qty":1365.7,"exp_customer_orders":106.56,"customer_lines":271,"next_week_demand":2122.0}]}; /* SHEET:END */
+
+          const CONFIG = {
+            duration: 13.0,
+            colors: ["#6d3cf0", "#d97706", "#1f8fa8", "#2563eb", "#c026d3", "#64748b"], // one per sheet row / bin
+            bins: { x0: 1252, w: 66, gap: 25, bottom: 830, h: 270 }, // bins scaled per SKU to its order-up-to level S
+            person: { x: 1262, y: 366 },
+            dock: { x: 1520, y: 360 },
+          };
+          const NS = "http://www.w3.org/2000/svg";
+          const svg = document.getElementById("va-svg");
+          const el = (tag, attrs, parent) => {
+            const n = document.createElementNS(NS, tag);
+            Object.entries(attrs).forEach(([k, v]) => n.setAttribute(k, v));
+            (parent || svg).appendChild(n);
+            return n;
+          };
+          const CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+          const fmt = (v) => Math.round(v).toLocaleString("en-US");
+          const md = (iso) => ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][Number(iso.slice(5, 7)) - 1] + " " + Number(iso.slice(8, 10));
+          const tl = gsap.timeline({ paused: true });
+          const D = CONFIG.duration;
+
+          // ---------------- sheet ----------------
+          document.getElementById("va-head-r").textContent = "FRI " + SHEET.friday + " · ARRIVES MON " + SHEET.arrives;
+          const rowsEl = document.getElementById("va-rows");
+          SHEET.rows.forEach((r, i) => {
+            const col = CONFIG.colors[i];
+            rowsEl.insertAdjacentHTML("beforeend",
+              '<div class="row" id="va-r' + i + '"><div class="tint" id="va-t' + i + '" style="background:' + col + '1c"></div>' +
+              '<div class="c c1"><i style="background:' + col + '"></i>' + r.sku + "</div>" +
+              '<div class="c c2">' + r.category.replace("_", " ") + "</div>" +
+              '<div class="c c3">' + fmt(r.on_hand) + '</div><div class="c c4">' + fmt(r.in_transit) + "</div>" +
+              '<div class="c c5">' + fmt(r.forecast_2wk) + '</div><div class="c c6">+' + fmt(r.safety) + "</div>" +
+              '<div class="c c7">' + fmt(r.order_qty) + '</div><div class="c c8">' + Math.round(r.exp_customer_orders) + " / " + r.customer_lines + "</div></div>");
+          });
+          document.getElementById("va-more").innerHTML =
+            "+ " + (SHEET.n_skus - SHEET.rows.length) + " more SKUs · BUYERS = customers likely to order next week, Σ P(order)";
+          document.getElementById("va-totals").innerHTML =
+            "<b>" + CHECK + "</b>" + SHEET.n_to_order + " of " + SHEET.n_skus + " SKUs to order · " + fmt(SHEET.order_value) + " at cost · stocked for 98% fill";
+
+          // ---------------- scene: planner, inbound truck, six bins ----------------
+          const P = CONFIG.person;
+          const person = el("g", { id: "va-person" });
+          el("circle", { cx: P.x, cy: P.y - 34, r: 16, fill: "#111827" }, person);
+          el("path", { d: "M" + (P.x - 26) + " " + (P.y + 40) + "v-26a26 22 0 0 1 52 0v26z", fill: "#6d3cf0" }, person);
+          const paper = el("g", { id: "va-paper" }, person);
+          el("rect", { x: P.x + 18, y: P.y - 10, width: 26, height: 32, rx: 4, fill: "#fff", stroke: "#111827", "stroke-width": 2.5 }, paper);
+          [0, 1, 2].forEach((k) => el("line", { x1: P.x + 23, x2: P.x + 39, y1: P.y - 2 + k * 8, y2: P.y - 2 + k * 8, stroke: "#9ca3af", "stroke-width": 2 }, paper));
+          const plab = el("text", { x: P.x + 60, y: P.y + 14, "text-anchor": "start", "font-family": "JetBrains Mono, monospace", "font-size": 20, "font-weight": 700, fill: "#6b7280", id: "va-plab" });
+          plab.textContent = "PLANNER";
+
+          // inbound truck (supplier delivery for this order)
+          const truck = el("g", { id: "va-truck" });
+          el("rect", { x: -40, y: -24, width: 54, height: 36, rx: 5, fill: "#0f9f6e" }, truck);
+          el("path", { d: "M14 -14h15l13 13v13H14z", fill: "#111827" }, truck);
+          el("rect", { x: 19, y: -9, width: 10, height: 8, rx: 2, fill: "#e5e7eb" }, truck);
+          el("circle", { cx: -24, cy: 14, r: 7, fill: "#111827" }, truck);
+          el("circle", { cx: 26, cy: 14, r: 7, fill: "#111827" }, truck);
+          const tlab = el("text", { x: 1640, y: 404, "text-anchor": "middle", "font-family": "JetBrains Mono, monospace", "font-size": 20, "font-weight": 700, fill: "#0f9f6e", id: "va-tlab" });
+          tlab.textContent = "arrives " + md(SHEET.arrives);
+
+          const Bn = CONFIG.bins;
+          const bins = SHEET.rows.map((r, i) => {
+            const x = Bn.x0 + i * (Bn.w + Bn.gap);
+            const S = r.forecast_2wk + r.safety; // order-up-to level = on hand + in transit + order
+            const h = (v) => (v / S) * Bn.h;
+            const col = CONFIG.colors[i];
+            const g = el("g", { id: "va-bin" + i });
+            el("rect", { x, y: Bn.bottom - Bn.h - 26, width: Bn.w, height: Bn.h + 26, rx: 8, fill: "#ffffff", stroke: "#d1d5db", "stroke-width": 2.5 }, g);
+            const yOn = Bn.bottom - h(r.on_hand), yTr = yOn - h(r.in_transit), yOr = yTr - h(r.order_qty);
+            const on = el("rect", { x: x + 5, y: yOn, width: Bn.w - 10, height: h(r.on_hand), rx: 3, fill: col }, g);
+            const tr = el("rect", { x: x + 5, y: yTr, width: Bn.w - 10, height: h(r.in_transit), rx: 3, fill: col, "fill-opacity": 0.35 }, g);
+            const or = el("rect", { x: x + 5, y: yOr, width: Bn.w - 10, height: h(r.order_qty), rx: 3, fill: "#0f9f6e" }, g);
+            el("line", { x1: x - 4, x2: x + Bn.w + 4, y1: Bn.bottom - Bn.h, y2: Bn.bottom - Bn.h, stroke: "#111827", "stroke-width": 2.5, "stroke-dasharray": "6 5" }, g);
+            const lab = el("text", { x: x + Bn.w / 2, y: Bn.bottom + 30, "text-anchor": "middle", "font-family": "JetBrains Mono, monospace", "font-size": 20, "font-weight": 700, fill: col }, g);
+            lab.textContent = r.sku;
+            // outbound: next week's customer orders ship from on hand + in transit
+            const ok = el("g", { opacity: 0 }, g);
+            el("circle", { cx: x + Bn.w / 2, cy: Bn.bottom - Bn.h - 50, r: 14, fill: "#0f9f6e" }, ok);
+            el("path", { d: "M" + (x + Bn.w / 2 - 6) + " " + (Bn.bottom - Bn.h - 50) + "l4 4 8-8.5", fill: "none", stroke: "#fff", "stroke-width": 3, "stroke-linecap": "round", "stroke-linejoin": "round" }, ok);
+            return { x, on, tr, or, ok, yOn, yTr, yOr, r };
+          });
+          const tgt = el("text", { x: Bn.x0 + 6 * (Bn.w + Bn.gap) - Bn.gap + 8, y: Bn.bottom - Bn.h + 7, "font-family": "JetBrains Mono, monospace", "font-size": 20, fill: "#111827", id: "va-tgt" });
+          tgt.textContent = "S";
+          svg.appendChild(truck);
+
+          // ---------------- choreography ----------------
+          tl.fromTo("#va-page", { clipPath: "inset(0px 100% 0px 0px)" }, { clipPath: "inset(0px 0% 0px 0px)", duration: 0.7, ease: "power3.inOut" }, 0);
+          tl.fromTo("#va-edge", { x: 0, opacity: 1 }, { x: 1920, duration: 0.7, ease: "power3.inOut" }, 0);
+          tl.to("#va-edge", { opacity: 0, duration: 0.1 }, 0.7);
+          tl.fromTo("#va-kick", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 0.5);
+          tl.fromTo("#va-ttl", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 0.55);
+          tl.fromTo("#va-ul", { scaleX: 0 }, { scaleX: 1, duration: 0.5, ease: "power3.out" }, 0.9);
+          tl.fromTo("#va-sheet", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 0.8);
+          SHEET.rows.forEach((_, i) => tl.fromTo("#va-r" + i, { opacity: 0, x: -16 }, { opacity: 1, x: 0, duration: 0.35, ease: "power2.out" }, 1.3 + i * 0.3));
+          tl.fromTo("#va-more", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 1.3 + SHEET.rows.length * 0.3);
+          tl.fromTo("#va-totals", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 3.4);
+          tl.fromTo(["#va-floor", "#va-lab", "#va-key"], { opacity: 0 }, { opacity: 1, duration: 0.5 }, 0.9);
+          tl.fromTo(["#va-person", "#va-plab"], { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 1.1);
+          tl.fromTo("#va-tgt", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 1.6);
+          // stock already there: on hand + in transit, bin by bin as its row lands
+          bins.forEach((b, i) => {
+            const at = 1.4 + i * 0.3;
+            tl.fromTo("#va-bin" + i, { opacity: 0 }, { opacity: 1, duration: 0.3 }, at - 0.1);
+            tl.fromTo(b.on, { attr: { y: Bn.bottom, height: 0 } }, { attr: { y: b.yOn, height: Bn.bottom - b.yOn }, duration: 0.5, ease: "power2.out" }, at);
+            tl.fromTo(b.tr, { attr: { opacity: 0 } }, { attr: { opacity: 1 }, duration: 0.4 }, at + 0.35);
+            tl.fromTo(b.or, { attr: { opacity: 0 } }, { attr: { opacity: 0 }, duration: 0.01 }, 0);
+          });
+          // the planner sends the list; the truck brings this order, bins fill up to S
+          tl.fromTo("#va-paper", { rotation: 0 }, { rotation: -10, svgOrigin: P.x + 31 + " " + (P.y + 6), duration: 0.3, ease: "sine.inOut", yoyo: true, repeat: 5 }, 4.0);
+          tl.fromTo("#va-truck", { x: 1880, y: CONFIG.dock.y, opacity: 0 }, { x: 1700, y: CONFIG.dock.y, opacity: 1, duration: 1.0, ease: "power2.out" }, 4.6);
+          tl.fromTo("#va-tlab", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 5.4);
+          bins.forEach((b, i) => {
+            const at = 5.8 + i * 0.22;
+            tl.to("#va-t" + i, { opacity: 1, duration: 0.25 }, at);
+            tl.fromTo(b.or, { attr: { opacity: 1, y: b.yOr - 60, height: b.yTr - b.yOr } }, { attr: { opacity: 1, y: b.yOr }, duration: 0.45, ease: "power2.in", immediateRender: false }, at);
+            tl.to("#va-t" + i, { opacity: 0.35, duration: 0.4 }, at + 0.6);
+          });
+          tl.to("#va-truck", { x: 1880, opacity: 0, duration: 0.9, ease: "power2.in" }, 7.6);
+          tl.to("#va-tlab", { opacity: 0, duration: 0.3 }, 7.6);
+          // next week's customer orders ship: all six SKUs are filled
+          bins.forEach((b, i) => tl.fromTo(b.ok, { attr: { opacity: 0 } }, { attr: { opacity: 1 }, duration: 0.25 }, 8.4 + i * 0.15));
+          document.getElementById("va-note").textContent = "✓ week of " + md(SHEET.next_week) + ": every order on these 6 SKUs filled";
+          tl.fromTo("#va-note", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, 9.3);
+          tl.fromTo("#va-caption", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 9.8);
+          // wipe out (white -> dark), revealing the next dark scene underneath
+          tl.to("#va-page", { clipPath: "inset(0px 0px 0px 100%)", duration: 0.7, ease: "power3.inOut" }, D - 0.7);
+          tl.fromTo("#va-edge", { x: 0, opacity: 0 }, { x: 1920, opacity: 1, duration: 0.7, ease: "power3.inOut", immediateRender: false }, D - 0.7);
+          window.__timelines["value"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

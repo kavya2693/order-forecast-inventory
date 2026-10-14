@@ -1,0 +1,168 @@
+<!doctype html>
+<html>
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template>
+      <style>
+        #routes-root { position: absolute; inset: 0; }
+        #routes-root svg.chart { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: visible; }
+        #routes-root .legend {
+          position: absolute; right: 120px; top: 252px; display: flex; flex-direction: row; align-items: center; gap: 30px;
+          font-family: var(--mono); font-size: 22px; color: var(--ink-soft); white-space: nowrap;
+        }
+        #routes-root .legend span { display: flex; align-items: center; gap: 12px; }
+        #routes-root .legend i { display: block; width: 30px; height: 5px; border-radius: 3px; }
+        #routes-root .legend i.bar { width: 16px; height: 22px; border-radius: 3px; background: rgba(178, 191, 204, 0.35); }
+        #routes-root .sub { position: absolute; left: 120px; top: 196px; font-family: var(--mono); font-size: 24px; color: var(--ink-mute); white-space: nowrap; }
+        #routes-root .ax { font-family: "JetBrains Mono", monospace; font-size: 20px; fill: #8494a6; }
+        #routes-root .card {
+          position: absolute; left: 1420px; top: 300px; width: 380px; padding: 26px 30px; border-radius: 16px;
+          border: 2px solid rgba(63, 216, 168, 0.6); background: rgba(12, 22, 32, 0.96);
+        }
+        #routes-root .card .k { font-family: var(--mono); font-size: 22px; letter-spacing: 0.08em; color: var(--c-opt); white-space: nowrap; }
+        #routes-root .card .row { display: flex; align-items: baseline; gap: 16px; margin-top: 12px; }
+        #routes-root .card .num { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 64px; font-weight: 700; letter-spacing: -0.03em; color: var(--ink); }
+        #routes-root .card .badge { font-family: var(--mono); font-size: 36px; font-weight: 700; color: #fff; background: var(--c-opt-deep); padding: 2px 14px; border-radius: 10px; }
+        #routes-root .card .from { margin-top: 10px; white-space: pre; font-family: var(--mono); font-size: 22px; color: var(--ink-soft); white-space: nowrap; }
+      </style>
+
+      <div id="routes-root" data-composition-id="routes" data-width="1920" data-height="1080">
+        <div class="scene" id="routes-in">
+          <div class="eyebrow" data-layout-allow-overlap id="routes-eyebrow">06 · The system running</div>
+          <div class="scene-title" data-layout-allow-overlap id="routes-title">One SKU, 26 held-out weeks: who saw the orders coming?</div>
+          <div class="sub" id="routes-sub-a">SKU <span id="routes-sku"></span> · all customer lines summed · forecast made one week ahead</div>
+          <div class="legend" id="routes-legend-a">
+            <span><i class="bar"></i>what customers ordered</span>
+            <span><i style="background: var(--c-model)"></i>two-stage LightGBM</span>
+            <span><i style="background: #8494a6"></i>ETS, smoothed history</span>
+          </div>
+          <div class="scene-title" data-layout-allow-overlap id="routes-title-b">All 150 SKUs, both tuned to fill 98%: stock on the shelf.</div>
+          <div class="sub" id="routes-sub-b">value of stock after each week's orders, test weeks after warm-up</div>
+          <svg class="chart" id="routes-svg" viewBox="0 0 1920 1080"></svg>
+          <div class="card" id="routes-card">
+            <div class="k">AVERAGE STOCK VALUE</div>
+            <div class="row"><div class="num" id="routes-num">969,484</div></div>
+            <div class="row"><div class="badge" id="routes-badge">−46.8%</div></div>
+            <div class="from">ETS        969,484</div><div class="from" style="color: var(--c-opt)">two-stage  516,188</div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (() => {
+          /* TRACE:BEGIN */ const TRACE = {"weeks":["2025-06-30","2025-07-07","2025-07-14","2025-07-21","2025-07-28","2025-08-04","2025-08-11","2025-08-18","2025-08-25","2025-09-01","2025-09-08","2025-09-15","2025-09-22","2025-09-29","2025-10-06","2025-10-13","2025-10-20","2025-10-27","2025-11-03","2025-11-10","2025-11-17","2025-11-24","2025-12-01","2025-12-08","2025-12-15","2025-12-22"],"warmup":2,"sku":"S0032","demand":[828.0,906.0,972.0,462.0,588.0,336.0,1146.0,756.0,1590.0,1254.0,1062.0,816.0,1230.0,2292.0,1848.0,930.0,1746.0,1716.0,894.0,1770.0,1296.0,1140.0,1782.0,2376.0,2616.0,72.0],"lgbm":[707.6,803.2,747.7,720.2,881.1,582.2,1022.7,887.0,1096.3,988.0,1065.7,1053.6,1133.5,1051.4,1058.5,1179.8,1441.2,1408.3,1357.4,1437.4,1229.6,1420.9,1367.4,1877.9,1906.4,276.8],"ets":[777.3,781.9,787.6,799.0,784.4,771.2,747.7,769.2,774.3,816.1,839.4,853.1,847.1,869.2,943.8,991.0,984.5,1028.2,1061.4,1055.0,1091.3,1096.6,1106.2,1134.8,1206.1,1279.8],"stock_lgbm":[1280937.0,467465.0,480168.0,465634.0,510045.0,625976.0,565125.0,437197.0,449352.0,404609.0,433626.0,464437.0,491576.0,559977.0,565226.0,518022.0,523387.0,531354.0,547624.0,545033.0,546132.0,567793.0,585280.0,461294.0,502951.0,606693.0],"stock_ets":[1714916.0,893899.0,902450.0,889995.0,936811.0,1413884.0,1231561.0,716623.0,856034.0,829140.0,840995.0,856042.0,897798.0,982083.0,991247.0,952203.0,976953.0,1016135.0,1026658.0,1027623.0,1016112.0,1094690.0,1093045.0,657634.0,471811.0,1590084.0]}; /* TRACE:END */
+          const tl = gsap.timeline({ paused: true });
+          const D = 14.6;
+          const NS = "http://www.w3.org/2000/svg";
+          const svg = document.getElementById("routes-svg");
+          const el = (tag, attrs, parent) => {
+            const n = document.createElementNS(NS, tag);
+            Object.entries(attrs).forEach(([k, v]) => n.setAttribute(k, v));
+            (parent || svg).appendChild(n);
+            return n;
+          };
+          const fmt = (v) => Math.round(v).toLocaleString("en-US");
+          const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+          document.getElementById("routes-sku").textContent = TRACE.sku;
+
+          // ---------- phase A: one SKU, weekly orders vs one-week-ahead forecasts ----------
+          const A = { x0: 210, x1: 1780, y0: 830, y1: 300, max: 2800 };
+          const n = TRACE.weeks.length, bw = (A.x1 - A.x0) / n;
+          const yA = (v) => A.y0 - (v / A.max) * (A.y0 - A.y1);
+          const gA = el("g", { id: "routes-ga" });
+          [0, 1000, 2000].forEach((v) => {
+            el("line", { x1: A.x0, x2: A.x1, y1: yA(v), y2: yA(v), stroke: "rgba(178,191,204,0.12)", "stroke-width": 2 }, gA);
+            const t = el("text", { x: A.x0 - 16, y: yA(v) + 7, "text-anchor": "end", class: "ax" }, gA);
+            t.textContent = v.toLocaleString("en-US");
+          });
+          const tu = el("text", { x: A.x0 - 16, y: A.y1 - 22, "text-anchor": "end", class: "ax" }, gA);
+          tu.textContent = "units";
+          let lastMon = -1;
+          TRACE.weeks.forEach((w, i) => {
+            const m = Number(w.slice(5, 7)) - 1;
+            if (m !== lastMon && Number(w.slice(8, 10)) <= 7) {
+              lastMon = m;
+              const t = el("text", { x: A.x0 + i * bw + 4, y: A.y0 + 34, class: "ax" }, gA);
+              t.textContent = MON[m];
+            }
+          });
+          const bars = TRACE.demand.map((v, i) =>
+            el("rect", { x: A.x0 + i * bw + bw * 0.18, y: yA(v), width: bw * 0.64, height: A.y0 - yA(v), rx: 4, fill: "rgba(178,191,204,0.3)" }, gA));
+          const ptsA = (arr) => arr.map((v, i) => [A.x0 + (i + 0.5) * bw, yA(v)]);
+          const line = (pts, col, w, id, parent) => {
+            const d = "M" + pts.map((p) => p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" L");
+            const p = el("path", { d, id, fill: "none", stroke: col, "stroke-width": w, "stroke-linejoin": "round", "stroke-linecap": "round" }, parent);
+            const L = pts.slice(1).reduce((s, q, k) => s + Math.hypot(q[0] - pts[k][0], q[1] - pts[k][1]), 0);
+            p.setAttribute("stroke-dasharray", L + " " + L);
+            p.setAttribute("stroke-dashoffset", L);
+            return { p, L };
+          };
+          const lEts = line(ptsA(TRACE.ets), "#8494a6", 5, "routes-l-ets", gA);
+          const lLg = line(ptsA(TRACE.lgbm), "#b9a2ff", 6, "routes-l-lg", gA);
+
+          // ---------- phase B: stock value on the shelf, all SKUs, both at 98% fill ----------
+          const B = { x0: 210, x1: 1230, y0: 830, y1: 300, max: 1800000 };
+          const wk = TRACE.weeks.slice(TRACE.warmup);
+          const sL = TRACE.stock_lgbm.slice(TRACE.warmup), sE = TRACE.stock_ets.slice(TRACE.warmup);
+          const bx = (i) => B.x0 + (i / (wk.length - 1)) * (B.x1 - B.x0);
+          const yB = (v) => B.y0 - (v / B.max) * (B.y0 - B.y1);
+          const gB = el("g", { id: "routes-gb" });
+          [0, 500000, 1000000, 1500000].forEach((v) => {
+            el("line", { x1: B.x0, x2: B.x1, y1: yB(v), y2: yB(v), stroke: "rgba(178,191,204,0.12)", "stroke-width": 2 }, gB);
+            const t = el("text", { x: B.x0 - 16, y: yB(v) + 7, "text-anchor": "end", class: "ax" }, gB);
+            t.textContent = v === 0 ? "0" : v / 1000000 + "M";
+          });
+          lastMon = -1;
+          wk.forEach((w, i) => {
+            const m = Number(w.slice(5, 7)) - 1;
+            if (m !== lastMon) {
+              lastMon = m;
+              const t = el("text", { x: bx(i), y: B.y0 + 34, class: "ax", "text-anchor": "middle" }, gB);
+              t.textContent = MON[m];
+            }
+          });
+          const area = (arr, col, id) => {
+            const pts = arr.map((v, i) => [bx(i), yB(v)]);
+            const d = "M" + B.x0 + " " + B.y0 + " L" + pts.map((p) => p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" L") + " L" + B.x1 + " " + B.y0 + "Z";
+            el("path", { d, fill: col, opacity: 0.12, id: id + "-a" }, gB);
+            return line(pts, col, 5, id, gB);
+          };
+          const bE = area(sE, "#8494a6", "routes-b-ets");
+          const bL = area(sL, "#3fd8a8", "routes-b-lg");
+          const avg = (arr) => arr.reduce((s, v) => s + v, 0) / arr.length;
+          const tagE = el("text", { x: B.x1 + 14, y: yB(avg(sE)) + 7, class: "ax", fill: "#b2bfcc", id: "routes-tag-e" }, gB);
+          tagE.textContent = "ETS";
+          const tagL = el("text", { x: B.x1 + 14, y: yB(avg(sL)) + 7, class: "ax", id: "routes-tag-l" }, gB);
+          tagL.textContent = "two-stage";
+          tagL.setAttribute("style", "fill:#3fd8a8");
+
+          // ---------- choreography ----------
+          tl.fromTo("#routes-in", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 0);
+          tl.fromTo("#routes-eyebrow", { opacity: 0, x: -24 }, { opacity: 1, x: 0, duration: 0.5, ease: "power2.out" }, 0.1);
+          tl.fromTo("#routes-title", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }, 0.2);
+          tl.fromTo(["#routes-sub-a", "#routes-legend-a"], { opacity: 0 }, { opacity: 1, duration: 0.5 }, 0.6);
+          tl.fromTo("#routes-ga", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 0.5);
+          bars.forEach((b, i) => tl.fromTo(b, { attr: { opacity: 0 } }, { attr: { opacity: 1 }, duration: 0.25 }, 0.8 + i * 0.045));
+          tl.to(lEts.p, { attr: { "stroke-dashoffset": 0 }, duration: 2.2, ease: "none" }, 2.0);
+          tl.to(lLg.p, { attr: { "stroke-dashoffset": 0 }, duration: 2.2, ease: "none" }, 3.2);
+          // phase B
+          const P2 = 7.2;
+          tl.to(["#routes-ga", "#routes-title", "#routes-sub-a", "#routes-legend-a"], { opacity: 0, duration: 0.4, ease: "power2.in" }, P2);
+          tl.fromTo(["#routes-title-b", "#routes-sub-b"], { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, P2 + 0.3);
+          tl.fromTo("#routes-gb", { opacity: 0 }, { opacity: 1, duration: 0.5 }, P2 + 0.4);
+          tl.fromTo(["#routes-b-ets-a", "#routes-b-lg-a"], { opacity: 0 }, { opacity: 0.12, duration: 0.6 }, P2 + 2.4);
+          tl.to(bE.p, { attr: { "stroke-dashoffset": 0 }, duration: 1.8, ease: "power1.inOut" }, P2 + 0.6);
+          tl.to(bL.p, { attr: { "stroke-dashoffset": 0 }, duration: 1.8, ease: "power1.inOut" }, P2 + 1.0);
+          tl.fromTo(["#routes-tag-e", "#routes-tag-l"], { opacity: 0 }, { opacity: 1, duration: 0.4 }, P2 + 2.6);
+          tl.fromTo("#routes-card", { opacity: 0, x: 30 }, { opacity: 1, x: 0, duration: 0.6, ease: "power3.out" }, P2 + 1.2);
+          const c = { v: 969484 };
+          const ce = document.getElementById("routes-num");
+          tl.to(c, { v: 516188, duration: 2.2, ease: "power2.inOut", onUpdate: () => { ce.textContent = fmt(c.v); } }, P2 + 1.8);
+          tl.fromTo("#routes-badge", { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1, duration: 0.5, ease: "power3.out" }, P2 + 4.0);
+          tl.to("#routes-in", { opacity: 0, duration: 0.4, ease: "power2.in" }, D - 0.4);
+          window.__timelines["routes"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

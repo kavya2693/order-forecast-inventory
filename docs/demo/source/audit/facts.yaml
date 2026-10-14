@@ -1,0 +1,428 @@
+# Audit facts for the order-forecast-inventory demo video.
+# Read by ~/Work/hyperframes/demos/tools/build_audit_report.py.
+#
+# Check expressions are Python, evaluated with these helpers (paths relative to the repo root;
+# a "demo:" prefix means relative to the demo project folder):
+#   R(path) -> pandas DataFrame from CSV      J(path) -> parsed JSON
+#   row(path, **eq) -> the single CSV row matching all equalities (a pandas Series)
+#   T(path) -> file text                      grep(path, regex) -> True/False
+# A check passes when fmt.format(value) == expect (or, with fmt "bool", when value is True).
+
+project:
+  name: order-forecast-inventory
+  title: "order-forecast-inventory: demo video audit report"
+  repo_url: https://github.com/kavya2693/order-forecast-inventory
+  repo_dir: ../../../..          # paths are relative to this file
+  demo_dir: ..
+  demo_display: docs/demo/source
+  out_dir: ../..
+  video: docs/demo/demo.mp4
+  video_duration_s: 86.0
+  outputs_dir: outputs
+  venv_python: .venv/bin/python
+  version_packages: [lightgbm, xgboost, duckdb, pandas, numpy, sklearn]
+  regenerate:
+    - "make run                                   # data/raw/*.parquet + outputs/*.csv, metrics.json (about 9 min)"
+    - "PYTHONPATH=src .venv/bin/python docs/demo/source/tools/export_order_list.py docs/demo/source/assets/order_list.json   # about 4 min"
+    - "python3 docs/demo/source/tools/inject_sheet.py docs/demo/source/assets/order_list.json docs/demo/source/compositions/value.html docs/demo/source/compositions/s04-routes.html --rows S0108,S0014,S0005,S0066,S0131,S0044"
+    - "cd docs/demo/source && npx --yes hyperframes@0.8.156 check && npx --yes hyperframes@0.8.156 render -f 30 -q looks -o renders/order-forecast-inventory-master.mp4 && cd -"
+    - "ffmpeg -y -i docs/demo/source/renders/order-forecast-inventory-master.mp4 -c:v libx264 -preset slow -crf 25 -pix_fmt yuv420p -movflags +faststart -an docs/demo/demo.mp4"
+    - "python3 docs/demo/source/tools/build_audit_report.py docs/demo/source/audit/facts.yaml   # stills, checks, MD/DOCX/PDF"
+  seeds: {scale: FULL, seed: 7, model_random_state: 0}
+  run_time: "metrics.json runtime_seconds = 522.6 s (about 8.7 min) for make run on the author's laptop, ORDER_FORECAST_THREADS=1"
+
+assumptions:
+  - id: A-01
+    statement: "All data is synthetic, produced by a seeded generator sized to the production problem (400 customers, 150 SKUs, 156 weeks, five source tables). The production data is proprietary."
+    source: "src/order_forecast/config.py:8-13 (Scale, seed=7); src/order_forecast/data.py:55 (generate); README 'The data'"
+    figures: []
+    all_figures: true
+    edit: ["src/order_forecast/config.py (Scale)", "src/order_forecast/data.py"]
+    rerun: ["make run"]
+  - id: A-02
+    statement: "The field-app lift is a property of the generator: a quote request precedes an order with a probability chosen in data.py (45% when an order is coming, 4% otherwise). Real quote logs may carry less signal."
+    source: "src/order_forecast/data.py:169; README 'Known limitations' (biggest gap)"
+    figures: [F-24, F-25, F-31, F-32, F-33, F-34, F-36, F-37, F-38, F-41, F-42]
+    edit: ["src/order_forecast/data.py:169"]
+    rerun: ["make run", "export_order_list.py + inject_sheet.py"]
+  - id: A-03
+    statement: "Carrying stock costs 25% of its value a year; holding cost = weekly stock value x 0.25 / 52, annualised."
+    source: "src/order_forecast/config.py:32 (ANNUAL_HOLDING_RATE = 0.25); inventory.py:62-63"
+    figures: [F-07, F-15, F-31, F-36, F-37, F-38, F-41, F-42, F-43, F-44, F-45]
+    edit: ["src/order_forecast/config.py:32"]
+    rerun: ["make run"]
+  - id: A-04
+    statement: "Inventory policy: weekly order-up-to S = F(t+1) + F(t+2) + z x sigma per SKU, one week lead time (an order placed at the end of week t arrives at the start of week t+2), lost sales, two warm-up weeks not scored, no case packs, minimums or capacity."
+    source: "src/order_forecast/inventory.py:1-8, :46-67; config.py:26-35; README 'Known limitations'"
+    figures: [F-12, F-13, F-15, F-27, F-31, F-33, F-34, F-36, F-37, F-38, F-39, F-40, F-41, F-42, F-43]
+    edit: ["src/order_forecast/config.py:26-35", "src/order_forecast/inventory.py"]
+    rerun: ["make run", "export_order_list.py + inject_sheet.py"]
+  - id: A-05
+    statement: "Safety stock sigma for each forecaster is the RMSE of its own two-week SKU forecast over the 13 validation weeks; z is found by bisection so the test weeks reach 98% fill."
+    source: "src/order_forecast/evaluate.py:205-220; inventory.py:72-97; config.py:22-23, :34"
+    figures: [F-12, F-13, F-14, F-15, F-28, F-31, F-36, F-37, F-38, F-41, F-42, F-43, F-44, F-45]
+    edit: ["src/order_forecast/config.py:23 (VAL_WEEKS), :34 (TARGET_FILL_RATE)"]
+    rerun: ["make run", "export_order_list.py + inject_sheet.py"]
+  - id: A-06
+    statement: "One backtest split: train on weeks before 2025-03-31, 13 validation weeks, 26 test weeks from 2025-06-30. No rolling origin, so there is no interval on any result."
+    source: "src/order_forecast/config.py:22-23; outputs/metrics.json split; README 'Known limitations'"
+    figures: [F-14, F-27, F-28, F-36, F-37, F-38, F-39, F-40, F-41, F-42, F-43, F-44, F-45, F-46, F-47]
+    edit: ["src/order_forecast/config.py:22-23"]
+    rerun: ["make run"]
+  - id: A-07
+    statement: "Unit costs are generated per SKU, so all money figures are in the generator's currency units, not a real currency."
+    source: "data/raw/skus.parquet unit_cost; README 'The result' ('Costs are in the same currency units as the generated unit costs')"
+    figures: [F-31, F-36, F-37, F-38, F-41, F-42, F-44, F-45]
+    edit: ["src/order_forecast/data.py (SKU unit_cost)"]
+    rerun: ["make run"]
+  - id: A-08
+    statement: "The order list on slide 07 is the LightGBM two-stage policy's decision at the end of test week 13 (Friday 2025-09-26). The export script re-runs make run's code for that forecaster and ETS and asserts the result equals outputs/inventory.csv."
+    source: "docs/demo/source/tools/export_order_list.py (DECISION_WEEK = 12, assert against outputs/inventory.csv)"
+    figures: [F-33, F-34, F-35, F-36, F-37, F-38]
+    edit: ["tools/export_order_list.py (DECISION_WEEK, TRACE_SKU_RANK)", "inject_sheet.py --rows"]
+    rerun: ["export_order_list.py + inject_sheet.py", "hyperframes render"]
+  - id: A-09
+    statement: "Video rounding: money and counts to whole numbers with thousands separators, accuracy and AUC to 3 decimals, percentages to 1 decimal; '~9 min' and '523 s' are rounded run times."
+    source: "this audit (display convention)"
+    figures: [F-21, F-29, F-30, F-31, F-35, F-39, F-40, F-41, F-42, F-43, F-44, F-45, F-46, F-47, F-50]
+    edit: ["the composition file named on each slide"]
+    rerun: ["hyperframes render"]
+  - id: A-10
+    statement: "Slide 01 (industries, everyday problems) is general distribution knowledge used as context. It is not a result of this repo and carries no numbers."
+    source: "author's framing; README 'The problem' supports problems 2-4"
+    figures: [F-01, F-02]
+    edit: ["compositions/s01-context.html"]
+    rerun: ["hyperframes render"]
+
+figures:
+  # ---- slide 01
+  - {id: F-01, slides: ["01"], label: "Industries that relate: wholesale & B2B distributors, food & grocery wholesale, consumer-goods supply", shown: "3 industry chips", type: general-knowledge, source: "author's framing", key: "-", formula: "-", manual: "Context statement, not a repo output."}
+  - {id: F-02, slides: ["01"], label: "Four everyday problems (lumpy orders; signals in other systems; short shipments; cash on the shelf)", shown: "4 problem cards", type: general-knowledge, source: "README 'The problem' and 'Why it is hard'", key: "README lines 13-35", formula: "-",
+     check: {expr: "grep('README.md', r'ships short') and grep('README.md', r'three systems') and grep('README.md', r'cash sits on the shelf') and grep('README.md', r'60% of line-weeks have no order')", fmt: bool}}
+  # ---- slide 02
+  - {id: F-03, slides: ["02", "05", "08"], label: "Customers and SKUs", shown: "400 customers x 150 SKUs", type: direct, source: "outputs/metrics.json; data/raw/customers.parquet, skus.parquet", key: "scale.customers, scale.skus", formula: "-",
+     check: {expr: "(lambda m: f\"{m['customers']} x {m['skus']}\")(J('outputs/metrics.json')['scale'])", fmt: "{}", expect: "400 x 150"}}
+  - {id: F-04, slides: ["02"], label: "Active customer x SKU lines", shown: "8,955 customer-SKU lines", type: direct, source: "outputs/metrics.json; recomputed from data/raw/sales_orders.parquet", key: "source_counts.pairs", formula: "distinct (customer, SKU) over non-cancelled order lines",
+     check: {expr: "(lambda a, b: a if a == b else -1)(J('outputs/metrics.json')['source_counts']['pairs'], panel_stats()['pairs'])", fmt: "{:,d}", expect: "8,955"}}
+  - {id: F-05, slides: ["02"], label: "Forecast horizons", shown: "Weekly, two weeks out", type: direct, source: "src/order_forecast/config.py:25", key: "HORIZONS = (1, 2)", formula: "-",
+     check: {expr: "grep('src/order_forecast/config.py', r'HORIZONS = \\(1, 2\\)')", fmt: bool}}
+  - {id: F-06, slides: ["02"], label: "Share of line-weeks with no order", shown: "60% of line-weeks: no order", type: derived, source: "outputs/data_profile.json; recomputed from data/raw/sales_orders.parquet", key: "share_zero_line_weeks = 0.5966", formula: "1 - (line-weeks with an order / panel rows) = 0.5966, shown as 60%",
+     check: {expr: "round(panel_stats()['zero_share'] * 100)", fmt: "{:d}%", expect: "60%"}}
+  - {id: F-07, slides: ["02"], label: "Three source systems joined in SQL; carrying cost 25% a year", shown: "3 systems joined in SQL · stock costs 25% a year", type: direct, source: "src/order_forecast/pipeline.py:12 (RAW_TABLES); config.py:32", key: "sales_orders, shipments, field_app_events; ANNUAL_HOLDING_RATE = 0.25", formula: "-",
+     check: {expr: "grep('src/order_forecast/pipeline.py', r'\"sales_orders\", \"shipments\", \"field_app_events\"') and grep('src/order_forecast/config.py', r'ANNUAL_HOLDING_RATE = 0.25')", fmt: bool}}
+  # ---- slide 03
+  - {id: F-08, slides: ["03"], label: "Flow blocks map to code: SQL join, two-stage forecast, safety stock, order-up-to", shown: "3 SOURCES → JOIN → FORECAST → SAFETY STOCK → ORDER-UP-TO → ORDER LIST", type: direct, source: "src/order_forecast/", key: "sql/*.sql, models.py, inventory.py", formula: "-",
+     check: {expr: "grep('src/order_forecast/pipeline.py', r'SQL_STAGES') and grep('src/order_forecast/models.py', r'class TwoStage') and grep('src/order_forecast/inventory.py', r'def simulate') and grep('src/order_forecast/inventory.py', r'def z_for_fill_rate')", fmt: bool}}
+  - {id: F-09, slides: ["03"], label: "Loop: z tuned until 98% fill", shown: "tune it to hit 98%", type: direct, source: "src/order_forecast/inventory.py:72-97 (bisection); config.py:34", key: "z_for_fill_rate, TARGET_FILL_RATE = 0.98", formula: "-",
+     check: {expr: "grep('src/order_forecast/inventory.py', r'by bisection') and grep('src/order_forecast/config.py', r'TARGET_FILL_RATE = 0.98')", fmt: bool}}
+  - {id: F-10, slides: ["03"], label: "Badge: 98% of orders filled (two-stage, matched z)", shown: "98% of orders filled", type: direct, source: "outputs/inventory.csv", key: "method=lgbm_two_stage, fill_rate_matched", formula: "-",
+     check: {expr: "row('outputs/inventory.csv', method='lgbm_two_stage')['fill_rate_matched'] * 100", fmt: "{:.0f}%", expect: "98%"}}
+  - {id: F-11, slides: ["03", "07"], label: "Badge / caption: half the stock cost", shown: "half the stock cost / about half the stock", type: derived, source: "outputs/inventory.csv", key: "holding_cost_matched_fill: lgbm_two_stage 129,047 vs ets 242,371", formula: "129,047 / 242,371 = 0.532 (about half)",
+     check: {expr: "0.45 <= row('outputs/inventory.csv', method='lgbm_two_stage')['holding_cost_matched_fill'] / row('outputs/inventory.csv', method='ets')['holding_cost_matched_fill'] <= 0.55", fmt: bool}}
+  - {id: F-12, slides: ["03"], label: "Badge: every SKU, weekly", shown: "every SKU, weekly", type: direct, source: "src/order_forecast/inventory.py:1-8; config.py:31", key: "weekly review, all SKUs", formula: "-",
+     check: {expr: "grep('src/order_forecast/config.py', r'REVIEW_WEEKS = 1') and grep('src/order_forecast/inventory.py', r'Policy per SKU')", fmt: bool}}
+  # ---- slide 04
+  - {id: F-13, slides: ["04"], label: "Each forecaster's own validation error sizes its safety stock", shown: "Each forecast's own past misses size its buffer", type: direct, source: "src/order_forecast/evaluate.py:205-209", key: "sigma = RMSE of the forecaster's two-week sum on validation weeks", formula: "-",
+     check: {expr: "grep('src/order_forecast/evaluate.py', r'sigma = np.sqrt\\(\\(\\(actual2 - fc2\\) \\*\\* 2\\).mean\\(axis=1\\)\\)')", fmt: bool}}
+  - {id: F-14, slides: ["04", "08"], label: "Test window length", shown: "26 held-out weeks", type: direct, source: "outputs/metrics.json", key: "split.test_weeks", formula: "-",
+     check: {expr: "J('outputs/metrics.json')['split']['test_weeks']", fmt: "{:d}", expect: "26"}}
+  - {id: F-15, slides: ["04"], label: "Bar heights: average stock at 98% fill, ETS vs two-stage (240 px vs 128 px)", shown: "two bars", type: derived, source: "outputs/inventory.csv avg_inventory_value_matched; compositions/explainer.html", key: "969,484 vs 516,188", formula: "128 = round(240 x 516,188 / 969,484)",
+     check: {expr: "round(240 * row('outputs/inventory.csv', method='lgbm_two_stage')['avg_inventory_value_matched'] / row('outputs/inventory.csv', method='ets')['avg_inventory_value_matched']) == 128 and grep('demo:compositions/explainer.html', r'height: 128px')", fmt: bool}}
+  - {id: F-16, slides: ["04"], label: "Footnote: holding cost vs ETS at 98% fill", shown: "−46.8% holding cost vs ETS", type: derived, source: "outputs/inventory.csv", key: "holding_cost_matched_fill", formula: "(129,047 - 242,371) / 242,371 x 100 = -46.76%",
+     check: {expr: "(row('outputs/inventory.csv', method='lgbm_two_stage')['holding_cost_matched_fill'] / row('outputs/inventory.csv', method='ets')['holding_cost_matched_fill'] - 1) * 100", fmt: "{:+.1f}%", expect: "-46.8%"}}
+  - {id: F-17, slides: ["04", "09"], label: "The top line-level accuracy score belongs to a costlier model", shown: "The top accuracy score picked a costlier model", type: derived, source: "outputs/accuracy.csv (h=1 accuracy_pair); outputs/inventory.csv", key: "lgbm_point has max accuracy_pair and higher holding cost than the other boosted models", formula: "argmax accuracy = lgbm_point; its holding cost > each of the other three boosted models",
+     check: {expr: "point_is_costlier()", fmt: bool}}
+  # ---- slide 05
+  - {id: F-18, slides: ["05"], label: "Raw source row counts", shown: "604,527 lines · 592,904 · 279,330", type: direct, source: "outputs/metrics.json source_counts", key: "raw_order_lines, shipments, raw_app_events", formula: "-",
+     check: {expr: "(lambda c: f\"{c['raw_order_lines']:,} · {c['shipments']:,} · {c['raw_app_events']:,}\")(J('outputs/metrics.json')['source_counts'])", fmt: "{}", expect: "604,527 · 592,904 · 279,330"}}
+  - {id: F-19, slides: ["05"], label: "Cancelled lines dropped by 01_staging.sql", shown: "−11,623 cancelled lines", type: derived, source: "outputs/metrics.json; data/raw/sales_orders.parquet status", key: "raw_order_lines - clean_order_lines", formula: "604,527 - 592,904 = 11,623 (all status = cancelled)",
+     check: {expr: "(lambda c: c['raw_order_lines'] - c['clean_order_lines'])(J('outputs/metrics.json')['source_counts'])", fmt: "{:,d}", expect: "11,623"}}
+  - {id: F-20, slides: ["05"], label: "API retry duplicates dropped", shown: "−8,136 API retries", type: derived, source: "outputs/metrics.json", key: "raw_app_events - dedup_app_events", formula: "279,330 - 271,194 = 8,136",
+     check: {expr: "(lambda c: c['raw_app_events'] - c['dedup_app_events'])(J('outputs/metrics.json')['source_counts'])", fmt: "{:,d}", expect: "8,136"}}
+  - {id: F-21, slides: ["05"], label: "Feature panel rows", shown: "1,337,363 line-weeks", type: direct, source: "outputs/metrics.json; recomputed from data/raw/sales_orders.parquet", key: "source_counts.panel_rows", formula: "-",
+     check: {expr: "(lambda a, b: a if a == b else -1)(J('outputs/metrics.json')['source_counts']['panel_rows'], panel_stats()['rows'])", fmt: "{:,d}", expect: "1,337,363"}}
+  - {id: F-22, slides: ["05"], label: "Training rows for the h=1 models", shown: "fit on 916,478 rows", type: direct, source: "outputs/run_log.txt", key: "'h=1 lgbm_two_stage fitted on 916,478 rows'", formula: "-",
+     check: {expr: "grep('outputs/run_log.txt', r'h=1 lgbm_two_stage fitted on 916,478 rows')", fmt: bool}}
+  - {id: F-23, slides: ["05"], label: "Every diagram box exists in the code", shown: "data.py, pipeline.py, 01/02/03 *.sql, models.py TwoStage + Tweedie, baseline.py, inventory.py z_for_fill_rate(), cli.py outputs, evaluate.py, metrics.py", type: direct, source: "src/order_forecast/", key: "files + functions", formula: "-",
+     check: {expr: "all(grep('src/order_forecast/' + f, p) for f, p in [('data.py', r'def generate'), ('pipeline.py', r'def build_features'), ('sql/01_staging.sql', r'stg_orders'), ('sql/02_panel.sql', r'TABLE panel'), ('sql/03_features.sql', r'TABLE features'), ('models.py', r'class TwoStage'), ('models.py', r'tweedie'), ('baseline.py', r'def ets_forecasts'), ('inventory.py', r'def z_for_fill_rate'), ('cli.py', r'inventory.csv'), ('cli.py', r'accuracy.csv'), ('cli.py', r'results.md'), ('evaluate.py', r'def make_split'), ('metrics.py', r'def wape')])", fmt: bool}}
+  - {id: F-24, slides: ["05"], label: "Fallback: if no z reaches 98%, the fixed z = 1.65 result is used", shown: "z = NaN → fixed z = 1.65 fallback", type: direct, source: "src/order_forecast/evaluate.py:220; inventory.py:85-86; config.py:33", key: "np.isfinite(z_star) else fixed", formula: "-",
+     check: {expr: "grep('src/order_forecast/evaluate.py', r'if np.isfinite\\(z_star\\) else fixed') and grep('src/order_forecast/config.py', r'SERVICE_Z = 1.65')", fmt: bool},
+     note: "Not taken in the published run: every forecaster's z was found (inventory.csv fill_rate_matched = 0.98 for all)."}
+  - {id: F-25, slides: ["05"], label: "Backtest windows and run time", shown: "val 13 wk · test 26 wk · 523 s full run", type: direct, source: "config.py:22-23; outputs/metrics.json runtime_seconds", key: "VAL_WEEKS, TEST_WEEKS, 522.6 s", formula: "522.6 rounded",
+     check: {expr: "f\"{13 if grep('src/order_forecast/config.py', r'VAL_WEEKS = 13') else 0} · {J('outputs/metrics.json')['split']['test_weeks']} · {round(J('outputs/metrics.json')['runtime_seconds'])}\"", fmt: "{}", expect: "13 · 26 · 523"}}
+  - {id: F-26, slides: ["05"], label: "Ablation models (history only, + app, + logistics)", shown: "ablation ×3", type: direct, source: "outputs/ablation.csv; evaluate.py:40-45", key: "3 ablations + the full model", formula: "rows - 1",
+     check: {expr: "len(R('outputs/ablation.csv')) - 1", fmt: "{:d}", expect: "3"}}
+  - {id: F-27, slides: ["05"], label: "Policy constants on the decision box", shown: "1-wk lead · 98% fill · horizons 1 and 2", type: direct, source: "src/order_forecast/config.py:25-34", key: "LEAD_TIME_WEEKS = 1; TARGET_FILL_RATE = 0.98", formula: "-",
+     check: {expr: "grep('src/order_forecast/config.py', r'LEAD_TIME_WEEKS = 1') and grep('src/order_forecast/config.py', r'TARGET_FILL_RATE = 0.98')", fmt: bool}}
+  # ---- slide 06
+  - {id: F-28, slides: ["06"], label: "Phase A: one SKU's weekly orders and one-week-ahead forecasts (two-stage LightGBM, ETS)", shown: "SKU S0032 chart (26 bars, 2 lines)", type: direct, source: "demo assets/order_list.json trace (re-run of make run; S0032 = 20th SKU by test-window demand)", key: "trace.demand, forecast_h1_lgbm, forecast_h1_ets", formula: "line forecasts summed to SKU, origin = week before",
+     check: {expr: "trace_matches()", fmt: bool}}
+  - {id: F-29, slides: ["06"], label: "Average stock value at 98% fill, ETS", shown: "ETS 969,484", type: direct, source: "outputs/inventory.csv", key: "method=ets, avg_inventory_value_matched", formula: "-",
+     check: {expr: "row('outputs/inventory.csv', method='ets')['avg_inventory_value_matched']", fmt: "{:,.0f}", expect: "969,484"}}
+  - {id: F-30, slides: ["06"], label: "Average stock value at 98% fill, two-stage LightGBM", shown: "two-stage 516,188", type: direct, source: "outputs/inventory.csv", key: "method=lgbm_two_stage, avg_inventory_value_matched", formula: "-",
+     check: {expr: "row('outputs/inventory.csv', method='lgbm_two_stage')['avg_inventory_value_matched']", fmt: "{:,.0f}", expect: "516,188"}}
+  - {id: F-31, slides: ["06"], label: "Average stock change", shown: "−46.8%", type: derived, source: "outputs/inventory.csv", key: "F-30 vs F-29", formula: "(516,188 - 969,484) / 969,484 x 100 = -46.76%",
+     check: {expr: "(row('outputs/inventory.csv', method='lgbm_two_stage')['avg_inventory_value_matched'] / row('outputs/inventory.csv', method='ets')['avg_inventory_value_matched'] - 1) * 100", fmt: "{:+.1f}%", expect: "-46.8%"}}
+  - {id: F-32, slides: ["06"], label: "Phase B weekly stock-value lines average to the published numbers", shown: "two weekly lines, Jul-Dec", type: derived, source: "demo assets/order_list.json stock_value_weekly", key: "mean of weeks 3-26 (after the 2 warm-up weeks)", formula: "mean = avg_inventory_value_matched",
+     check: {expr: "stock_lines_match()", fmt: bool}}
+  # ---- slide 07
+  - {id: F-33, slides: ["07"], label: "Order list date and arrival", shown: "FRI 2025-09-26 · ARRIVES MON 2025-10-06", type: direct, source: "demo assets/order_list.json decision", key: "friday, arrives (test week 13 + 2 weeks lead)", formula: "week_start 2025-09-22 + 4 days; arrival = start of week t+2",
+     check: {expr: "(lambda d: f\"{d['friday']} · {d['arrives']}\")(J('demo:assets/order_list.json')['decision'])", fmt: "{}", expect: "2025-09-26 · 2025-10-06"}}
+  - {id: F-34, slides: ["07"], label: "Six sheet rows (on hand, in transit, need 2 wk, safety, order, buyers)", shown: "S0108, S0014, S0005, S0066, S0131, S0044", type: direct, source: "demo assets/order_list.json, injected into compositions/value.html", key: "decision.rows", formula: "order = need 2 wk + safety - on hand - in transit; buyers = Σ P(order) over the SKU's lines / lines",
+     check: {expr: "sheet_rows_match()", fmt: bool}}
+  - {id: F-35, slides: ["07"], label: "SKUs not shown", shown: "+ 144 more SKUs", type: derived, source: "decision.n_skus", key: "150 - 6", formula: "150 - 6 = 144",
+     check: {expr: "J('demo:assets/order_list.json')['decision']['n_skus'] - 6", fmt: "{:d}", expect: "144"}}
+  - {id: F-36, slides: ["07"], label: "SKUs with an order this Friday", shown: "145 of 150 SKUs to order", type: direct, source: "demo assets/order_list.json", key: "decision.n_to_order (order qty > 0.5)", formula: "-",
+     check: {expr: "(lambda d: f\"{d['n_to_order']} of {d['n_skus']}\")(J('demo:assets/order_list.json')['decision'])", fmt: "{}", expect: "145 of 150"}}
+  - {id: F-37, slides: ["07"], label: "Order value at unit cost", shown: "814,648 at cost", type: direct, source: "demo assets/order_list.json", key: "decision.order_value", formula: "Σ order qty x unit cost",
+     check: {expr: "J('demo:assets/order_list.json')['decision']['order_value']", fmt: "{:,.0f}", expect: "814,648"}}
+  - {id: F-38, slides: ["07"], label: "Next week's orders on the six SKUs are all filled from on hand + in transit", shown: "week of Sep 29: every order on these 6 SKUs filled", type: derived, source: "demo assets/order_list.json rows next_week_demand", key: "demand in week 2025-09-29 <= on hand + in transit", formula: "all six rows",
+     check: {expr: "all(r['next_week_demand'] <= r['on_hand'] + r['in_transit'] for r in J('demo:assets/order_list.json')['decision']['rows'] if r['sku'] in ('S0108','S0014','S0005','S0066','S0131','S0044'))", fmt: bool}}
+  # ---- slide 08
+  - {id: F-39, slides: ["08"], label: "Holding cost at 98% fill, ETS → two-stage", shown: "242,371 → 129,047", type: direct, source: "outputs/inventory.csv", key: "holding_cost_matched_fill", formula: "-",
+     check: {expr: "f\"{row('outputs/inventory.csv', method='ets')['holding_cost_matched_fill']:,.0f} → {row('outputs/inventory.csv', method='lgbm_two_stage')['holding_cost_matched_fill']:,.0f}\"", fmt: "{}", expect: "242,371 → 129,047"}}
+  - {id: F-40, slides: ["08"], label: "Holding cost change at 98% fill", shown: "−46.8%", type: derived, source: "outputs/inventory.csv", key: "F-39", formula: "(129,047 - 242,371) / 242,371 x 100 = -46.76%",
+     check: {expr: "(row('outputs/inventory.csv', method='lgbm_two_stage')['holding_cost_matched_fill'] / row('outputs/inventory.csv', method='ets')['holding_cost_matched_fill'] - 1) * 100", fmt: "{:+.1f}%", expect: "-46.8%"}}
+  - {id: F-41, slides: ["08"], label: "SKU-level accuracy (1 - WAPE), h=1, two-stage vs ETS", shown: "0.808 · ETS 0.704", type: direct, source: "outputs/accuracy.csv", key: "horizon=1, accuracy_sku", formula: "-",
+     check: {expr: "f\"{row('outputs/accuracy.csv', horizon=1, method='lgbm_two_stage')['accuracy_sku']:.3f} · {row('outputs/accuracy.csv', horizon=1, method='ets')['accuracy_sku']:.3f}\"", fmt: "{}", expect: "0.808 · 0.704"}}
+  - {id: F-42, slides: ["08"], label: "Fill rate at fixed z = 1.65, two-stage vs ETS", shown: "97.1% · ETS 94.8%", type: direct, source: "outputs/inventory.csv", key: "fill_rate_fixed_z", formula: "x 100",
+     check: {expr: "f\"{row('outputs/inventory.csv', method='lgbm_two_stage')['fill_rate_fixed_z']*100:.1f}% · {row('outputs/inventory.csv', method='ets')['fill_rate_fixed_z']*100:.1f}%\"", fmt: "{}", expect: "97.1% · 94.8%"}}
+  - {id: F-43, slides: ["08"], label: "Order-occurrence ROC-AUC, two-stage vs ETS-level ranking", shown: "0.830 · 0.582", type: direct, source: "outputs/order_auc.csv", key: "scorer rows", formula: "-",
+     check: {expr: "f\"{row('outputs/order_auc.csv', scorer='lgbm_two_stage P(order)')['auc']:.3f} · {row('outputs/order_auc.csv', scorer='ETS level (rank only)')['auc']:.3f}\"", fmt: "{}", expect: "0.830 · 0.582"}}
+  # ---- slide 09
+  - {id: F-44, slides: ["09"], label: "Holding cost at 98% fill: Tweedie, XGBoost two-stage, LightGBM two-stage, point", shown: "123,907 · 124,338 · 129,047 · 136,464", type: direct, source: "outputs/inventory.csv", key: "holding_cost_matched_fill", formula: "-",
+     check: {expr: "' · '.join(f\"{row('outputs/inventory.csv', method=m)['holding_cost_matched_fill']:,.0f}\" for m in ['lgbm_single_tweedie','xgb_two_stage','lgbm_two_stage','lgbm_point'])", fmt: "{}", expect: "123,907 · 124,338 · 129,047 · 136,464"}}
+  - {id: F-45, slides: ["09"], label: "Line-level accuracy (1 - WAPE, h=1) under each name", shown: "0.118 · 0.120 · 0.121 · 0.214", type: direct, source: "outputs/accuracy.csv", key: "horizon=1, accuracy_pair", formula: "-",
+     check: {expr: "' · '.join(f\"{row('outputs/accuracy.csv', horizon=1, method=m)['accuracy_pair']:.3f}\" for m in ['lgbm_single_tweedie','xgb_two_stage','lgbm_two_stage','lgbm_point'])", fmt: "{}", expect: "0.118 · 0.120 · 0.121 · 0.214"}}
+  - {id: F-46, slides: ["09"], label: "Bar widths: 1,000 px track = 150,000", shown: "826 / 829 / 860 / 910 px", type: derived, source: "compositions/s06-twist.html", key: "inline widths", formula: "round(cost / 150)",
+     check: {expr: "all(grep('demo:compositions/s06-twist.html', 'width: %dpx' % round(row('outputs/inventory.csv', method=m)['holding_cost_matched_fill'] / 150)) for m in ['lgbm_single_tweedie','xgb_two_stage','lgbm_two_stage','lgbm_point'])", fmt: bool}}
+  - {id: F-47, slides: ["09"], label: "The two-stage split does not earn its keep; kept because P(order) is actionable", shown: "One Tweedie model tied it; it stays only because P(order) is a number a rep can act on", type: direct, source: "README 'The result' point 3", key: "README", formula: "-",
+     check: {expr: "grep('README.md', r'two-stage split does not earn its complexity') and grep('README.md', r'P\\(order\\) is a number a rep can act on')", fmt: bool}}
+  # ---- slide 10
+  - {id: F-48, slides: ["10"], label: "Licence", shown: "MIT", type: direct, source: "LICENSE line 1", key: "-", formula: "-",
+     check: {expr: "T('LICENSE').startswith('MIT License')", fmt: bool}}
+  - {id: F-49, slides: ["10"], label: "Stack chips are real dependencies", shown: "LightGBM · XGBoost · DuckDB SQL · Python", type: direct, source: "pyproject.toml dependencies", key: "lightgbm, xgboost, duckdb", formula: "-",
+     check: {expr: "all(grep('pyproject.toml', p) for p in [r'\"lightgbm', r'\"xgboost', r'\"duckdb', r'requires-python'])", fmt: bool}}
+  - {id: F-50, slides: ["10"], label: "Run command and run time", shown: "$ make run # 400 customers × 150 SKUs, ~9 min", type: derived, source: "Makefile; outputs/metrics.json runtime_seconds", key: "522.6 s", formula: "522.6 / 60 = 8.7 min",
+     check: {expr: "f\"~{round(J('outputs/metrics.json')['runtime_seconds'] / 60)} min\" if grep('Makefile', r'^run:') else 'no run target'", fmt: "{}", expect: "~9 min"}}
+
+slides:
+  - id: "01"
+    title: "The industry"
+    image: slides/slide-01.jpg
+    time: "0.0-7.2 s"
+    composition: "compositions/s01-context.html"
+    text:
+      - "01 · THE INDUSTRY"
+      - "Every Friday, someone decides how much stock to buy."
+      - "WHO LIVES WITH THIS · Wholesale & B2B distributors · Food & grocery wholesale · Consumer-goods supply"
+      - "01 Customer orders are lumpy — A line orders some weeks and skips others"
+      - "02 The useful signals sit in other systems — ERP, warehouse and the reps' app are never joined"
+      - "03 Run short and orders ship short — The customer waits, or buys elsewhere"
+      - "04 Buy too much and cash sits on the shelf — A blind forecast needs a bigger safety buffer"
+      - "THIS PROJECT tackles all four, end to end · join → forecast → size stock → measure"
+    assumptions: [A-10]
+    illustrative: ["The whole slide is context; no repo figures."]
+    change: "Edit the chips (#ctx-c1..3) and cards (#ctx-k1..4) in compositions/s01-context.html."
+  - id: "02"
+    title: "This project"
+    image: slides/slide-02.jpg
+    time: "6.8-11.6 s"
+    composition: "compositions/s02-hook.html"
+    text:
+      - "02 · THIS PROJECT"
+      - "400 customers × 150 SKUs. 8,955 customer-SKU lines. Weekly, two weeks out."
+      - "60% of line-weeks: no order · 3 systems joined in SQL · stock costs 25% a year"
+    assumptions: [A-01, A-03]
+    illustrative: ["Rings in the background are decoration."]
+    change: "Headline spans #hook-l1..l3 and chips #hook-f1..f3 in compositions/s02-hook.html; scale comes from config.py FULL."
+  - id: "03"
+    title: "How it works (white chapter, slide A)"
+    image: slides/slide-03.jpg
+    time: "11.3-19.3 s"
+    composition: "compositions/explainer.html (CONFIG.blocks, CONFIG.groups, CONFIG.loop)"
+    text:
+      - "03 · HOW IT WORKS"
+      - "From orders to a stock order"
+      - "[SQL · DUCKDB: 3 SOURCES orders, deliveries, reps' app → JOIN one table per line per week] → [EVERY WEEK: FORECAST will they order? how much? → SAFETY STOCK sized from past misses → ORDER-UP-TO how much to buy per SKU] → ORDER LIST ✓ 98% of orders filled ✓ half the stock cost ✓ every SKU, weekly"
+      - "tune it to hit 98% (loop over safety stock)"
+    assumptions: [A-03, A-04, A-05]
+    illustrative: ["Icons and colours are a visual language, not data."]
+    change: "Edit CONFIG in compositions/explainer.html; badge truth comes from inventory.csv (F-10, F-11)."
+  - id: "04"
+    title: "The key idea (white chapter, slide B)"
+    image: slides/slide-04.jpg
+    time: "19.3-26.3 s"
+    composition: "compositions/explainer.html (#ex-b ...)"
+    text:
+      - "04 · THE KEY IDEA"
+      - "Scored by the stock it needs"
+      - "Each forecast's own past misses size its buffer — a less informed forecast needs more spare stock"
+      - "Every forecast must fill 98% of orders — the same service, on 26 held-out weeks"
+      - "The winner holds the least stock — not the one with the best accuracy score"
+      - "SAME 98% FILL · STOCK ON THE SHELF: Smoothed history vs Joined-signals model, both '98% filled'. Same service. The better-informed forecast needs about half the stock."
+      - "Replay, 26 test weeks: −46.8% holding cost vs ETS at 98% fill. The top accuracy score picked a costlier model."
+    assumptions: [A-03, A-04, A-05, A-06]
+    illustrative: ["'Smoothed history' = ETS; 'Joined-signals model' = two-stage LightGBM. Bar heights are proportional to average stock value at 98% fill (F-15); the bars carry no numbers on screen."]
+    change: "Markup under #ex-b in compositions/explainer.html; footnote figures are F-16 and F-17."
+  - id: "05"
+    title: "Architecture"
+    image: slides/slide-05.jpg
+    time: "26.0-40.8 s"
+    composition: "compositions/s03-architecture.html"
+    text:
+      - "05 · ARCHITECTURE"
+      - "Three sources, one SQL panel, one stock decision."
+      - "① SOURCES data.py: sales_orders (ERP · 604,527 lines), shipments (WMS/TMS · 592,904), field_app_events (reps' app · 279,330), customers · skus (400 · 150 rows) → parquet"
+      - "② SQL FEATURE LAYER pipeline.py · DuckDB: 01_staging.sql Clean + dedupe (−11,623 cancelled lines, −8,136 API retries) → 02_panel.sql Weekly panel (zero weeks made explicit) → 03_features.sql Features as of week t (lags · app · logistics) → 1 row / line / week → features (1,337,363 line-weeks) → panel"
+      - "③ MODELS: models.py · TwoStage Two-stage forecast P(order) × E[qty|order], LightGBM · XGBoost, 1 and 2 weeks ahead, fit on 916,478 rows; models.py Tweedie, one stage (challenger); baseline.py ETS per line + 4-week moving avg → F₁, F₂"
+      - "④ DECISION inventory.py Order-up-to policy S = F₁ + F₂ + z·σ, Σ lines → SKU · 1-wk lead, ◆ z_for_fill_rate(), bisect z until 98% fill → order qty → cli.py outputs/ (inventory.csv, accuracy.csv, results.md); z = NaN → evaluate.py fixed z = 1.65 (fallback)"
+      - "⑤ evaluate.py · metrics.py Backtest: train | val 13 wk | test 26 wk · 1 − WAPE · bias · fill · holding cost · ablation ×3 · 523 s full run; test forecasts in, σ / SKU fed back to the policy"
+      - "Legend: data · models · decision · evaluation · batch hand-off · feedback · fallback; then 'critical path: orders → SQL → features → two-stage → policy → outputs'"
+    assumptions: [A-01, A-04, A-05, A-06]
+    illustrative: ["Packets moving along the wires show execution order, not data volume.", "The critical path is the chain that produces the deciding number (inventory.csv); it is a reading of cli.py's call order, not a measured latency.", "There is no human-in-the-loop step and no online serving in the repo; outputs are batch files."]
+    change: "Nodes are built from the add()/cyl() calls and the wires array in compositions/s03-architecture.html."
+  - id: "06"
+    title: "The system running"
+    image: slides/slide-06a.jpg
+    image2: slides/slide-06b.jpg
+    time: "40.4-55.0 s"
+    composition: "compositions/s04-routes.html (TRACE block injected by tools/inject_sheet.py)"
+    text:
+      - "06 · THE SYSTEM RUNNING"
+      - "One SKU, 26 held-out weeks: who saw the orders coming? · SKU S0032 · all customer lines summed · forecast made one week ahead · bars = what customers ordered, lines = two-stage LightGBM, ETS"
+      - "All 150 SKUs, both tuned to fill 98%: stock on the shelf. · value of stock after each week's orders, test weeks after warm-up"
+      - "AVERAGE STOCK VALUE 969,484 → 516,188 · −46.8% · ETS 969,484 · two-stage 516,188"
+    assumptions: [A-04, A-05, A-06, A-07, A-08]
+    illustrative: ["The repo saves no plots; both charts are drawn from the exported JSON (real values, not redrawn by hand)."]
+    change: "Re-run tools/export_order_list.py (TRACE_SKU_RANK picks the SKU) and tools/inject_sheet.py; layout in compositions/s04-routes.html."
+  - id: "07"
+    title: "End-user value (white)"
+    image: slides/slide-07.jpg
+    time: "54.7-67.7 s"
+    composition: "compositions/value.html (SHEET block injected by tools/inject_sheet.py)"
+    text:
+      - "07 · END-USER VALUE"
+      - "What the planner gets"
+      - "REPLENISHMENT ORDER LIST · FRI 2025-09-26 · ARRIVES MON 2025-10-06 — columns SKU, CATEGORY, ON HAND, IN TRANSIT, NEED 2 WK, SAFETY, ORDER, BUYERS"
+      - "S0108 personal care 630 2,116 4,251 +557 2,063 93 / 211"
+      - "S0014 household 1,269 2,855 5,330 +1,598 2,804 100 / 241"
+      - "S0005 frozen 619 1,768 3,529 +595 1,737 46 / 106"
+      - "S0066 beverages 387 1,997 3,521 +480 1,619 66 / 180"
+      - "S0131 snacks 464 1,068 2,139 +558 1,166 58 / 148"
+      - "S0044 dry grocery 1,289 1,841 3,833 +663 1,366 107 / 271"
+      - "+ 144 more SKUs · BUYERS = customers likely to order next week, Σ P(order) · ✓ 145 of 150 SKUs to order · 814,648 at cost · stocked for 98% fill"
+      - "PLANNER → WAREHOUSE · on hand · in transit · this order · S · arrives Oct 6 · ✓ week of Sep 29: every order on these 6 SKUs filled"
+      - "Every Friday the planner gets an order for every SKU, sized to fill 98% of orders with about half the stock."
+    assumptions: [A-02, A-04, A-05, A-07, A-08]
+    illustrative: ["The planner figure, truck and bins are illustrative; each bin is scaled to its own SKU's order-up-to level S, and the segment heights (on hand, in transit, this order) are real proportions.", "The scene compresses time: the order arrives on Oct 6, while next week's orders (Sep 29) are served from on hand + in transit (F-38).", "'about half the stock' is the 46.8% holding-cost cut (F-11)."]
+    change: "Re-run tools/export_order_list.py, then tools/inject_sheet.py (--rows picks the SKUs); layout in compositions/value.html."
+  - id: "08"
+    title: "Results"
+    image: slides/slide-08.jpg
+    time: "67.4-76.2 s"
+    composition: "compositions/s05-results.html (stats array)"
+    text:
+      - "08 · RESULTS · 26 HELD-OUT WEEKS"
+      - "Half the carrying cost, at the same 98% fill."
+      - "INVENTORY −46.8% holding cost / yr at 98% fill · 242,371 → 129,047"
+      - "FORECAST 0.808 SKU-level accuracy, 1 − WAPE · ETS 0.704"
+      - "INVENTORY 97.1% orders filled at the textbook z = 1.65 · ETS 94.8%"
+      - "FORECAST 0.830 AUC: will this line order next week? · rank by ETS level 0.582"
+      - "two-stage LightGBM vs ETS · 400 customers · 150 SKUs · one backtest split, so no interval"
+    assumptions: [A-03, A-04, A-05, A-06, A-07, A-09]
+    illustrative: ["Mini bars: card 1 = after / before; cards 2-4 = the value on a 0-1 scale, growing from the ETS value."]
+    change: "The stats array and card text in compositions/s05-results.html."
+  - id: "09"
+    title: "What didn't win"
+    image: slides/slide-09.jpg
+    time: "75.8-82.0 s"
+    composition: "compositions/s06-twist.html"
+    text:
+      - "09 · WHAT DIDN'T WIN"
+      - "The best accuracy score picked a costlier model."
+      - "Holding cost per year to reach 98% fill (line-level accuracy under each name)"
+      - "Tweedie, one stage (accuracy 0.118) 123,907 · XGBoost two-stage (0.120) 124,338 · LightGBM two-stage (0.121) 129,047 · \"Point\" forecast (best accuracy 0.214) 136,464"
+      - "Also: the two-stage split did not earn its keep. One Tweedie model tied it; it stays only because P(order) is a number a rep can act on."
+    assumptions: [A-03, A-05, A-06, A-07, A-09]
+    illustrative: ["Bar lengths: 1,000 px track = 150,000 (F-46)."]
+    change: "Rows #twist-r1..r4 (bar widths are inline styles) in compositions/s06-twist.html."
+  - id: "10"
+    title: "End card"
+    image: slides/slide-10.jpg
+    time: "81.6-86.0 s"
+    composition: "compositions/s07-end.html"
+    text:
+      - "10 · OPEN SOURCE · MIT · RUNS ON A LAPTOP"
+      - "order-forecast-inventory"
+      - "github.com/kavya2693/order-forecast-inventory"
+      - "LightGBM · XGBoost · DuckDB SQL · Python"
+      - "$ make run   # 400 customers × 150 SKUs, ~9 min"
+    assumptions: [A-09]
+    illustrative: []
+    change: "Text in compositions/s07-end.html."
+
+caveats:
+  - "The field-app lift, and with it most of the holding-cost gap, is a property of the seeded generator (A-02). How much a real rep's quote log predicts real orders must be measured on real data (README 'Known limitations', biggest gap)."
+  - "One backtest split (A-06): the three boosted mean forecasts land within about 4% of each other on holding cost, which a second split could reorder."
+  - "Line-level accuracy is low for every method (0.12 at one week, negative at two weeks); the result rests on summing to SKU level (README 'The result' point 1)."
+  - "Slide 07's order list is a re-run of make run's code for two forecasters (A-08); the export asserts its inventory numbers equal outputs/inventory.csv before writing."
+  - "Money figures are in generated currency units (A-07)."
+  - "Slide 01 statements are general industry knowledge (A-10)."
+  - "The repo has no online serving, latency target or human approval step; the architecture shows a batch backtest with file outputs."
+
+stills:
+  master: renders/order-forecast-inventory-master.mp4   # relative to demo_dir
+  width: 1600
+  times: {"01": 6.4, "02": 11.1, "03": 18.9, "04": 25.5, "05": 39.9, "06a": 47.0, "06b": 54.2, "07": 66.8, "08": 75.6, "09": 81.4, "10": 85.8}
+
+# Extra check helpers (Python), available to check expressions.
+helpers: |
+  import re as _re
+  _cache = {}
+  def panel_stats():
+      """Recompute pairs, panel rows and the zero share from the raw order lines (as 01/02 SQL do)."""
+      if 'p' not in _cache:
+          _P = R.__closure__[0].cell_contents  # the builder's path resolver
+          o = pd.read_parquet(_P('data/raw/sales_orders.parquet'))
+          c = o[(o['status'] != 'cancelled') & (o['qty_ordered'] > 0)].copy()
+          c['w'] = pd.to_datetime(c['order_date']).dt.to_period('W-SUN').dt.start_time
+          first = c.groupby(['customer_id', 'sku_id'])['w'].min()
+          rows = int(((c['w'].max() - first).dt.days // 7 + 1).sum())
+          nz = c[['customer_id', 'sku_id', 'w']].drop_duplicates().shape[0]
+          _cache['p'] = {'pairs': len(first), 'rows': rows, 'zero_share': 1 - nz / rows}
+      return _cache['p']
+  def point_is_costlier():
+      acc = R('outputs/accuracy.csv'); acc = acc[acc['horizon'] == 1].set_index('method')['accuracy_pair']
+      inv = R('outputs/inventory.csv').set_index('method')['holding_cost_matched_fill']
+      boosted = ['lgbm_two_stage', 'xgb_two_stage', 'lgbm_single_tweedie']
+      return acc.idxmax() == 'lgbm_point' and all(inv['lgbm_point'] > inv[m] for m in boosted)
+  def _block(path, name):
+      html = T(path)
+      m = _re.search(r"const %s = (\{.*?\}); /\* %s:END" % (name, name), html, _re.S)
+      return json.loads(m.group(1))
+  def sheet_rows_match():
+      """The SHEET block in value.html must equal the exported order list, and the arithmetic must hold."""
+      sheet = _block('demo:compositions/value.html', 'SHEET')
+      src = {r['sku']: r for r in J('demo:assets/order_list.json')['decision']['rows']}
+      for r in sheet['rows']:
+          s = src[r['sku']]
+          if any(r[k] != s[k] for k in r):
+              return False
+          if abs(r['forecast_2wk'] + r['safety'] - r['on_hand'] - r['in_transit'] - r['order_qty']) > 0.3:
+              return False
+      return [r['sku'] for r in sheet['rows']] == ['S0108', 'S0014', 'S0005', 'S0066', 'S0131', 'S0044']
+  def trace_matches():
+      tr = _block('demo:compositions/s04-routes.html', 'TRACE')
+      d = J('demo:assets/order_list.json')
+      return (tr['sku'] == d['trace']['sku'] == 'S0032' and tr['demand'] == d['trace']['demand']
+              and tr['lgbm'] == d['trace']['forecast_h1_lgbm'] and tr['ets'] == d['trace']['forecast_h1_ets']
+              and len(tr['demand']) == J('outputs/metrics.json')['split']['test_weeks'])
+  def stock_lines_match():
+      d = J('demo:assets/order_list.json'); w = d['warmup_weeks']
+      inv = R('outputs/inventory.csv').set_index('method')['avg_inventory_value_matched']
+      ok = True
+      for m in ('lgbm_two_stage', 'ets'):
+          v = d['stock_value_weekly'][m][w:]
+          ok = ok and abs(sum(v) / len(v) - inv[m]) < 1.0
+      return ok

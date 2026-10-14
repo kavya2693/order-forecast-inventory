@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template>
+      <style>
+        #endcard-root { position: absolute; inset: 0; }
+        #endcard-root .end { position: absolute; left: 120px; top: 270px; width: 1680px; }
+        #endcard-root .kicker { font-family: var(--mono); font-size: 26px; letter-spacing: 0.16em; color: var(--c-opt); }
+        #endcard-root .name { margin-top: 18px; font-family: var(--mono); font-size: 100px; font-weight: 700; letter-spacing: -0.04em; color: var(--ink); }
+        #endcard-root .url { margin-top: 18px; font-family: var(--mono); font-size: 42px; color: var(--c-opt); }
+        #endcard-root .chips { display: flex; gap: 18px; margin-top: 52px; }
+        #endcard-root .chip { display: block; font-family: var(--mono); font-size: 30px; font-weight: 700; padding: 12px 26px; border-radius: 999px; color: var(--ink); }
+        #endcard-root .chip.opt { border: 2px solid rgba(63, 216, 168, 0.65); background: rgba(63, 216, 168, 0.1); }
+        #endcard-root .chip.mod { border: 2px solid rgba(185, 162, 255, 0.65); background: rgba(185, 162, 255, 0.1); }
+        #endcard-root .chip.dat { border: 2px solid rgba(127, 168, 255, 0.65); background: rgba(127, 168, 255, 0.1); }
+        #endcard-root .run { margin-top: 44px; font-family: var(--mono); font-size: 26px; color: var(--ink-mute); white-space: pre; }
+      </style>
+      <div id="endcard-root" data-composition-id="endcard" data-width="1920" data-height="1080">
+        <div class="scene" id="endcard-in">
+          <div class="end">
+            <div class="kicker" id="endcard-kicker">10 · OPEN SOURCE · MIT · RUNS ON A LAPTOP</div>
+            <div class="name" id="endcard-name">order-forecast-inventory</div>
+            <div class="url" id="endcard-url">github.com/kavya2693/order-forecast-inventory</div>
+            <div class="chips">
+              <span class="chip mod" id="endcard-c1">LightGBM</span>
+              <span class="chip mod" id="endcard-c2">XGBoost</span>
+              <span class="chip dat" id="endcard-c3">DuckDB SQL</span>
+              <span class="chip dat" id="endcard-c4">Python</span>
+            </div>
+            <div class="run" id="endcard-run">$ make run   # 400 customers × 150 SKUs, ~9 min</div>
+          </div>
+        </div>
+      </div>
+      <script>
+        (() => {
+          const tl = gsap.timeline({ paused: true });
+          tl.fromTo("#endcard-in", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 0);
+          tl.fromTo("#endcard-kicker", { opacity: 0, x: -24 }, { opacity: 1, x: 0, duration: 0.5, ease: "power2.out" }, 0.15);
+          tl.fromTo("#endcard-name", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.7, ease: "expo.out" }, 0.25);
+          tl.fromTo("#endcard-url", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 0.5);
+          [1, 2, 3, 4].forEach((n, i) =>
+            tl.fromTo("#endcard-c" + n, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, 0.8 + i * 0.1));
+          tl.fromTo("#endcard-run", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 1.4);
+          window.__timelines["endcard"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>
