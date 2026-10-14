@@ -10,10 +10,10 @@
 [x] Lint + format + types clean
 [x] One-command E2E run verified on this machine
 [ ] Gate 2 closed (results not yet reviewed by Kavyasri)
-[ ] Dockerfile builds and runs (built and run in CI only; no local Docker daemon)
+[ ] Dockerfile builds and runs (no local Docker daemon; verified by the CI docker job)
 [ ] CI workflow green on GitHub
 [x] .env.example present, no real values
-[ ] prepush-scan.sh passes
+[x] prepush-scan.sh passes
 [x] 10+ incremental commits
 [ ] Public repo created, pushed, remote HEAD == local HEAD
 [ ] Root README index updated
