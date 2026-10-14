@@ -8,9 +8,9 @@ Weekly order forecasts for every customer x SKU line of a B2B distributor, built
 shipments, the field-sales app and sales orders in SQL, and judged by how much stock they let
 the warehouse hold at the same fill rate.
 
-[![86-second silent walkthrough: the replenishment problem, the hook, the architecture, the planner's order list, the results and the metric that picks the wrong model](docs/demo/demo.gif)](docs/demo/demo.mp4)
+[![86-second silent walkthrough: the replenishment problem, the hook, the architecture, the planner's order list, the results and the metric that picks the wrong model](docs/demo/demo.gif)](https://kavya2693.github.io/work-demos/order-forecast-inventory.mp4)
 
-*86-second silent walkthrough. Click for the full video ([MP4, 5.6 MB](docs/demo/demo.mp4)).*
+*86-second silent walkthrough. [Play the full video](https://kavya2693.github.io/work-demos/order-forecast-inventory.mp4) · [download the MP4, 5.6 MB](docs/demo/demo.mp4).*
 
 📄 **Audit report:** every figure and assumption in the video, traced to its source — [PDF](docs/demo/AUDIT_REPORT.pdf) · [Word](docs/demo/AUDIT_REPORT.docx) · [Markdown](docs/demo/AUDIT_REPORT.md)
 
