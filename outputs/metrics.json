@@ -1,0 +1,79 @@
+{
+  "scale": {
+    "customers": 400,
+    "skus": 150,
+    "weeks": 156
+  },
+  "split": {
+    "val_start_week": "2025-03-31",
+    "test_start_week": "2025-06-30",
+    "test_weeks": 26
+  },
+  "source_counts": {
+    "raw_order_lines": 604527,
+    "clean_order_lines": 592904,
+    "raw_app_events": 279330,
+    "dedup_app_events": 271194,
+    "shipments": 592904,
+    "pairs": 8955,
+    "panel_rows": 1337363
+  },
+  "target_fill_rate": 0.98,
+  "summary": {
+    "accuracy_pair_h1": {
+      "lgbm_two_stage": 0.1209,
+      "xgb_two_stage": 0.1199,
+      "lgbm_single_tweedie": 0.1185,
+      "lgbm_point": 0.2143,
+      "ets": -0.0958,
+      "moving_avg_4w": -0.1881
+    },
+    "accuracy_sku_h1": {
+      "lgbm_two_stage": 0.8081,
+      "xgb_two_stage": 0.8088,
+      "lgbm_single_tweedie": 0.8084,
+      "lgbm_point": 0.761,
+      "ets": 0.7044,
+      "moving_avg_4w": 0.6978
+    },
+    "bias_pair_h1": {
+      "lgbm_two_stage": -0.0213,
+      "xgb_two_stage": -0.0316,
+      "lgbm_single_tweedie": -0.0362,
+      "lgbm_point": -0.1406,
+      "ets": -0.0572,
+      "moving_avg_4w": 0.0084
+    },
+    "holding_cost_matched_fill": {
+      "lgbm_two_stage": 129047.0,
+      "xgb_two_stage": 124338.0,
+      "lgbm_single_tweedie": 123907.0,
+      "lgbm_point": 136464.0,
+      "ets": 242371.0,
+      "moving_avg_4w": 230047.0,
+      "perfect": 0.0
+    },
+    "fill_rate_fixed_z": {
+      "lgbm_two_stage": 0.9706,
+      "xgb_two_stage": 0.9714,
+      "lgbm_single_tweedie": 0.9707,
+      "lgbm_point": 0.9736,
+      "ets": 0.9481,
+      "moving_avg_4w": 0.9482,
+      "perfect": 1.0
+    }
+  },
+  "feature_importance_gain_top10": {
+    "quotes_l0": 0.28,
+    "order_rate_52w": 0.2258,
+    "weeks_since_order": 0.1105,
+    "target_woy": 0.0765,
+    "qty_l0": 0.044,
+    "cust_qty_4w": 0.042,
+    "cust_events_l0": 0.0343,
+    "views_l0": 0.0301,
+    "visits_l0": 0.0279,
+    "order_rate_13w": 0.0207
+  },
+  "runtime_seconds": 522.6
+}

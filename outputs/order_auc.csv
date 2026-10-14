@@ -1,0 +1,4 @@
+scorer,auc
+ETS level (rank only),0.582433139127549
+lgbm_two_stage P(order),0.8301438955978642
+xgb_two_stage P(order),0.8298017132407115

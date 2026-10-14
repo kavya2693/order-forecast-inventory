@@ -1,0 +1,53 @@
+[   2.6s] generated 400 customers x 150 SKUs x 156 weeks
+[   9.1s] SQL pipeline: 1,337,363 customer x SKU weeks, 8,955 pairs
+[  10.6s] ETS baseline fitted
+[ 107.7s] h=1 lgbm_two_stage fitted on 916,478 rows
+[ 164.2s] h=1 xgb_two_stage fitted on 916,478 rows
+[ 207.8s] h=1 lgbm_single_tweedie fitted on 916,478 rows
+[ 258.7s] ablation 'history only' fitted
+[ 315.3s] ablation 'history + field app' fitted
+[ 368.8s] ablation 'history + logistics' fitted
+[ 436.7s] h=2 lgbm_two_stage fitted on 907,523 rows
+[ 482.4s] h=2 xgb_two_stage fitted on 907,523 rows
+[ 521.1s] h=2 lgbm_single_tweedie fitted on 907,523 rows
+[ 522.6s] inventory simulation done
+
+Forecast accuracy on the test weeks (1 - WAPE)
+ horizon              method  accuracy_pair  bias_pair  accuracy_sku  accuracy_frequent  accuracy_intermittent  weeks_better_than_ets
+       1      lgbm_two_stage          0.121     -0.021         0.808              0.304                  0.006                     26
+       1       xgb_two_stage          0.120     -0.032         0.809              0.304                  0.004                     26
+       1 lgbm_single_tweedie          0.118     -0.036         0.808              0.293                  0.009                     26
+       1          lgbm_point          0.214     -0.141         0.761              0.303                  0.159                     26
+       1                 ets         -0.096     -0.057         0.704              0.171                 -0.263                      0
+       1       moving_avg_4w         -0.188      0.008         0.698              0.105                 -0.372                      0
+       2      lgbm_two_stage         -0.030     -0.035         0.795              0.226                 -0.190                     26
+       2       xgb_two_stage         -0.031     -0.035         0.794              0.226                 -0.192                     26
+       2 lgbm_single_tweedie         -0.026     -0.044         0.797              0.227                 -0.184                     26
+       2          lgbm_point          0.047     -0.252         0.674              0.164                 -0.027                     26
+       2                 ets         -0.083     -0.062         0.703              0.178                 -0.247                      0
+       2       moving_avg_4w         -0.129     -0.001         0.705              0.141                 -0.299                      1
+
+Inventory policy over the test weeks
+             method  fixed_z  fill_rate_fixed_z  holding_cost_fixed_z  safety_stock_value  z_for_98pct_fill  holding_cost_matched_fill  avg_inventory_value_matched  fill_rate_matched
+     lgbm_two_stage     1.65              0.971             98740.702          390258.736             2.230                 129047.001                   516188.004               0.98
+      xgb_two_stage     1.65              0.971             97645.509          395425.313             2.157                 124338.475                   497353.901               0.98
+lgbm_single_tweedie     1.65              0.971             95013.985          395255.357             2.200                 123907.440                   495629.760               0.98
+         lgbm_point     1.65              0.974            115886.019          731788.282             1.860                 136464.101                   545856.405               0.98
+                ets     1.65              0.948            131066.018          566134.078             3.099                 242370.926                   969483.702               0.98
+      moving_avg_4w     1.65              0.948            131602.083          465294.278             3.234                 230047.468                   920189.870               0.98
+            perfect     1.65              1.000                 0.000               0.000             0.000                      0.000                        0.000               1.00
+
+Order-occurrence ranking (h=1)
+                 scorer   auc
+  ETS level (rank only) 0.582
+lgbm_two_stage P(order) 0.830
+ xgb_two_stage P(order) 0.830
+
+Source ablation, LightGBM two-stage, h=1
+           features  accuracy_pair  bias_pair
+       history only          0.028     -0.029
+history + field app          0.113     -0.020
+history + logistics          0.036     -0.022
+  all three sources          0.121     -0.021
+[ 522.6s] wrote outputs/
+uv run order-forecast --refresh --out outputs  467.77s user 6.26s system 90% cpu 8:44.21 total
