@@ -206,8 +206,8 @@ cases, and that the two-stage model loses the quote signal when the app features
   aggregation to SKU level; a use case that needs line-level forecasts (customer-specific
   allocation, rep call lists beyond P(order)) is not served.
 - One backtest origin split (train / 13 validation / 26 test weeks), not a rolling-origin
-  evaluation, so there is no interval on the holding-cost gap. All boosted models land within
-  4% of each other, which is inside what a second split could move.
+  evaluation, so there is no interval on the holding-cost gap. The three mean-forecast boosted models land
+  within about 4% of each other, which is inside what a second split could move.
 - Lost sales, one lead time for every SKU, no supplier minimums, case packs or warehouse
   capacity in the inventory policy. Safety stock uses a single sigma per SKU, not one per season.
 - Lines that first order inside the test window are invisible to every forecaster; their demand
