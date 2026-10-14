@@ -38,3 +38,13 @@ def test_ets_level_matches_hand_recursion() -> None:
     for v in y:
         level = a * v + (1 - a) * level
     assert out["ets"].iloc[-1] == pytest.approx(level)
+
+
+def test_ets_output_joins_back_onto_the_panel() -> None:
+    # The backtest merges ETS levels onto the panel by week; a dtype drift on week_start breaks that join.
+    weeks = pd.date_range("2024-01-01", periods=12, freq="7D").astype("datetime64[us]")
+    df = pd.DataFrame({"customer_id": "C1", "sku_id": "S1", "week_start": weeks, "qty_l0": 3.0})
+    out = ets_forecasts(df, weeks[8])
+    assert out["week_start"].dtype == df["week_start"].dtype
+    merged = df.merge(out, on=["customer_id", "sku_id", "week_start"], how="left")
+    assert merged["ets"].notna().all()

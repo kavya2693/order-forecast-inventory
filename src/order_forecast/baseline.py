@@ -63,5 +63,7 @@ def ets_forecasts(panel: pd.DataFrame, fit_until: pd.Timestamp) -> pd.DataFrame:
         .melt(id_vars=keys, var_name="week_start", value_name="ets")
         .dropna(subset=["ets"])
     )
+    # melt hands back the column labels as objects; restore the panel's datetime dtype for the join.
+    long["week_start"] = pd.to_datetime(long["week_start"]).astype(panel["week_start"].dtype)
     alphas = pd.DataFrame({"ets_alpha": best_alpha}, index=wide.index).reset_index()
     return long.merge(alphas, on=keys).sort_values([*keys, "week_start"]).reset_index(drop=True)
