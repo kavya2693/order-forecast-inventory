@@ -8,6 +8,187 @@ Weekly order forecasts for every customer x SKU line of a B2B distributor, built
 shipments, the field-sales app and sales orders in SQL, and judged by how much stock they let
 the warehouse hold at the same fill rate.
 
+[![86-second silent walkthrough: the replenishment problem, the hook, the architecture, the planner's order list, the results and the metric that picks the wrong model](docs/demo/demo.gif)](docs/demo/demo.mp4)
+
+*86-second silent walkthrough. Click for the full video ([MP4, 5.6 MB](docs/demo/demo.mp4)).*
+
+📄 **Audit report:** every figure and assumption in the video, traced to its source — [PDF](docs/demo/AUDIT_REPORT.pdf) · [Word](docs/demo/AUDIT_REPORT.docx) · [Markdown](docs/demo/AUDIT_REPORT.md)
+
+## At a glance
+
+| | |
+|---|---|
+| **Problem** | A distributor's planner orders 150 SKUs for 400 retail customers every Friday from a smoothed history of each customer's orders. Quote requests in the reps' app and short shipments in the warehouse system never reach that forecast, so the gap is covered with safety stock at a 25% annual carrying cost. |
+| **Approach** | Three DuckDB SQL stages join orders, shipments and app events into a weekly customer x SKU panel with explicit zero weeks and leak-free features. LightGBM and XGBoost two-stage models (P(order) x E[qty given an order]) forecast each line one and two weeks ahead. Every forecaster feeds the same SKU-level order-up-to policy, and the deciding number is holding cost at a matched 98% fill rate. |
+| **Result** | Holding cost at 98% fill falls **48.7%** against per-line ETS (242,371 to 124,338 a year, XGBoost two-stage). SKU-level 1 - WAPE **0.81 vs 0.70**. "Will this line order next week" ROC-AUC **0.830 vs 0.582**. The field app carries almost all the lift (line accuracy 0.028 history only, 0.113 with the app). |
+| **What didn't win** | The two-stage split ties a single Tweedie LightGBM (123,907 vs 129,047 a year at 98% fill). Line-level accuracy is 0.12 one week ahead and below zero two weeks ahead for every method. The model with the best line-level accuracy (the "point" variant, 0.214) is the worst boosted model on stock. Logistics features add 0.008. |
+
+## Architecture
+
+![Architecture walkthrough: three source systems, the SQL stages, the forecasters and the order-up-to policy that scores them](docs/demo/architecture.gif)
+
+```mermaid
+flowchart LR
+    subgraph SRC["Sources"]
+        GEN["Seeded generator<br/>scripts/generate_data.py<br/>data.py"]
+        SO[("sales_orders.parquet<br/>ERP order lines")]
+        SH[("shipments.parquet<br/>warehouse and transport")]
+        EV[("field_app_events.parquet<br/>reps' app API log")]
+        DIM[("customers.parquet · skus.parquet")]
+    end
+
+    subgraph FEAT["Data and features (DuckDB)"]
+        CON["raw_* views<br/>pipeline.connect"]
+        STG["Cleaning and dedupe<br/>sql/01_staging.sql"]
+        PAN[("panel: customer x SKU x week<br/>sql/02_panel.sql")]
+        FTR[("features + targets y_h1, y_h2<br/>sql/03_features.sql")]
+    end
+
+    subgraph MOD["Models"]
+        ETS["ETS(A,N,N) per line<br/>baseline.ets_forecasts"]
+        MA["4-week moving average<br/>qty_mean_4w feature"]
+        TS["Two-stage P(order) x E[qty]<br/>LightGBM and XGBoost<br/>models.TwoStage"]
+        TW["Single-stage Tweedie<br/>models.SingleStage"]
+        PT["Point variant: zero unless P at least 0.5<br/>evaluate.fit_predict"]
+    end
+
+    subgraph DEC["Decision: order-up-to policy"]
+        AGG["Sum lines to SKU, h=1 and h=2<br/>evaluate._sku_matrix"]
+        SIG["Safety stock sigma per forecaster<br/>13 validation weeks<br/>evaluate.inventory_table"]
+        SIM["Weekly order-up-to, lost sales<br/>inventory.simulate"]
+        ZB["z for 98% fill, bisection<br/>inventory.z_for_fill_rate"]
+    end
+
+    subgraph EVAL["Evaluation"]
+        ACC["1 - WAPE and bias, line and SKU<br/>metrics.py · evaluate.accuracy_table"]
+        ABL["Source ablation<br/>evaluate.ablation_table"]
+        AUC["Order-occurrence ROC-AUC<br/>evaluate.auc_table"]
+        NEW["Lines first ordered in test window<br/>invisible to every forecaster"]
+    end
+
+    subgraph OUT["Outputs"]
+        REP[("outputs/<br/>inventory.csv · accuracy.csv · ablation.csv<br/>order_auc.csv · metrics.json")]
+        MD["Run report<br/>report.write_report"]
+    end
+
+    GEN --> SO & SH & EV & DIM
+    SO --> CON
+    SH --> CON
+    EV --> CON
+    DIM --> CON
+    CON -->|"raw_ views"| STG
+    STG -->|"stg_orders, stg_events, stg_shipments"| PAN
+    PAN -->|"weekly qty, quotes, visits, short ships"| FTR
+    FTR -->|"qty history"| ETS
+    FTR -->|"qty_mean_4w"| MA
+    FTR -->|"history + app + logistics"| TS
+    FTR -->|"same feature set"| TW
+    TS -->|"P(order), size"| PT
+    ETS -->|"line forecasts"| AGG
+    MA -->|"line forecasts"| AGG
+    TS -->|"line forecasts"| AGG
+    TW -->|"line forecasts"| AGG
+    PT -->|"line forecasts"| AGG
+    AGG -->|"F1, F2 per SKU-week"| SIM
+    SIG -->|"sigma per SKU"| SIM
+    SIM -->|"fill rate"| ZB
+    ZB -.->|"next z until fill reaches 98%"| SIM
+    AGG -.->|"validation-window error feeds back"| SIG
+    NEW -.->|"demand still hits stock"| SIM
+    EV -.->|"outage weeks arrive as zero events"| STG
+    GEN -.->|"regenerated when data/raw is empty"| CON
+    TS --> ACC & ABL & AUC
+    ETS --> ACC
+    SIM -->|"fill rate, holding cost"| REP
+    ACC --> REP
+    ABL --> REP
+    AUC --> REP
+    REP --> MD
+
+    classDef data fill:#7fa8ff,stroke:#3d6fd9,color:#0b1020
+    classDef model fill:#b9a2ff,stroke:#7a5fd6,color:#0b1020
+    classDef decision fill:#3fd8a8,stroke:#1f9c76,color:#0b1020
+    classDef evaluation fill:#f2c46d,stroke:#b8902f,color:#0b1020
+    classDef risk fill:#ff8a73,stroke:#cc5640,color:#0b1020
+
+    class GEN,SO,SH,EV,DIM,CON,STG,PAN,FTR,REP,MD data
+    class ETS,MA,TS,TW model
+    class PT,NEW risk
+    class AGG,SIG,SIM,ZB decision
+    class ACC,ABL,AUC evaluation
+```
+
+Solid edges are the weekly data flow; dotted edges are the feedback and fallback paths. Red
+nodes are where the result can mislead: the "point" variant is what chasing line-level WAPE
+produces, and lines that start inside the test window are demand no forecaster saw.
+
+### Components
+
+| Component | Responsibility | File |
+|---|---|---|
+| Data generator | Five source tables with the causal links and the mess described under The data | [`scripts/generate_data.py`](scripts/generate_data.py), [`src/order_forecast/data.py`](src/order_forecast/data.py) |
+| Scale and policy constants | `FULL` and `SMALL` scales, the 13 validation / 26 test week split, lead time, 25% holding rate, z = 1.65, 98% fill target | [`src/order_forecast/config.py`](src/order_forecast/config.py) |
+| SQL pipeline | Registers the parquet files as `raw_*` views and runs staging, panel and features in DuckDB | [`src/order_forecast/pipeline.py`](src/order_forecast/pipeline.py), [`src/order_forecast/sql/`](src/order_forecast/sql/) |
+| ETS baseline | ETS(A,N,N) per line, smoothing weight chosen per series on training weeks, vectorised across lines | [`src/order_forecast/baseline.py`](src/order_forecast/baseline.py) |
+| Order models | Two-stage classifier x gamma regressor (LightGBM, XGBoost), single-stage Tweedie, feature groups for the ablation | [`src/order_forecast/models.py`](src/order_forecast/models.py) |
+| Inventory policy | Weekly order-up-to with lost sales and a two-week warm-up; bisection for the z that reaches a target fill rate | [`src/order_forecast/inventory.py`](src/order_forecast/inventory.py) |
+| Metrics | WAPE, 1 - WAPE and bias | [`src/order_forecast/metrics.py`](src/order_forecast/metrics.py) |
+| Backtest | Train / validation / test split, fitting every forecaster at h=1 and h=2, accuracy, ablation, AUC and inventory tables | [`src/order_forecast/evaluate.py`](src/order_forecast/evaluate.py) |
+| Orchestrator and report | One command end to end; writes `outputs/` and `results.md` | [`src/order_forecast/cli.py`](src/order_forecast/cli.py), [`src/order_forecast/report.py`](src/order_forecast/report.py) |
+
+### Design decisions
+
+| Decision | Options considered | Chosen | Trade-off |
+|---|---|---|---|
+| What picks the model | Line-level 1 - WAPE; SKU-level 1 - WAPE; inventory cost | Holding cost at a matched 98% fill rate from one shared order-up-to policy ([ADR-0001](docs/adr/0001-two-stage-model-scored-by-inventory.md)) | Judges forecasts the way the planner uses them, but adds a simulation that has to be right (tested on perfect, flat and matched-z cases) and inherits its simplifications: lost sales, one lead time, no case packs |
+| Model structure | Croston / SBA; one global DeepAR-style model; single Tweedie regressor; two-stage occurrence x size | Two-stage in LightGBM and XGBoost, with single-stage Tweedie kept as the check | Croston cannot use the joined signals and DeepAR is heavier to run and explain. The two-stage split bought no accuracy over Tweedie; it stays because P(order) is something a rep can act on |
+| Where the joins live | pandas in Python; SQL in a warehouse dialect | SQL in DuckDB, kept close to BigQuery Standard SQL ([mapping](docs/BIGQUERY.md)) | Runs on a laptop and in CI and moves to a warehouse with mechanical edits; the customer x SKU x week cross-join is the expensive step there and needs partitioning |
+| When a shipment fact counts | The order week; the week the fact became known | Week known: short ships on `ship_date`, lateness on `delivered_date` | No leakage from the future, at the cost of a later and weaker logistics signal (it adds 0.008 line accuracy) |
+| Safety stock | One textbook sigma for every method; each forecaster's own error | RMSE of each forecaster's two-week SKU sum over 13 validation weeks | A forecaster pays for its own errors, which is the point of the comparison; 13 weeks is a short window and sigma is one number per SKU, not per season |
+| Backtest design | Rolling origin; one train / validation / test split | One split: training weeks, 13 validation, 26 test | Runs in about nine minutes at full scale, but there is no interval on the holding-cost gap; the three boosted mean forecasts land within about 4% of each other |
+
+### Data contracts
+
+| Stage | Input | Output |
+|---|---|---|
+| Generator | `Scale` (customers, SKUs, weeks, start Monday, seed) | `sales_orders`: `order_id, line_no, customer_id, sku_id, order_date` (date), `qty_ordered` (int), `unit_price, channel, status`; `shipments`: `shipment_id, order_id, line_no, customer_id, sku_id, warehouse_id, ship_date, promised_date, delivered_date` (nullable), `qty_shipped` (int); `field_app_events`: `event_id, event_ts` (timestamp), `customer_id, sku_id` (null for visits), `rep_id, event_type` (`quote_request`, `catalog_view`, `visit_checkin`); `customers`: `customer_id, region, segment, rep_id`; `skus`: `sku_id, category, case_pack, unit_cost, list_price` |
+| 01_staging.sql | `raw_*` views | `stg_orders` (cancelled and zero lines dropped, `week_start`), `stg_events` (one row per `event_id`), `stg_shipments` (`is_partial, qty_short, is_late, transit_days`, `ship_week`, `delivered_week`) |
+| 02_panel.sql | staging tables | `panel`: one row per `customer_id, sku_id, week_start` from the line's first order; `qty, n_lines, quotes, views, visits, cust_events, partial_lines, qty_short, missing_pod, late_lines` (int, zero-filled), `transit_days` (nullable float) |
+| 03_features.sql | `panel`, `raw_skus`, `raw_customers` | `features`: keys, `category, segment`, demand lags and rolling means and order rates, customer and SKU rolling volume, app counts, logistics counts, target week of year, targets `y_h1, y_h2` (null at the end of history) |
+| Backtest | `features`, split | one row per line x origin from the validation window on: `<method>_h1, <method>_h2` (float, non-negative) for every forecaster, plus `abl::<feature set>` |
+| Inventory | SKU x week matrices of demand, `F1, F2`, `sigma` per SKU, `unit_cost` | `inventory.csv`: `fill_rate_fixed_z, holding_cost_fixed_z, safety_stock_value, z_for_98pct_fill, holding_cost_matched_fill, avg_inventory_value_matched, fill_rate_matched` per method |
+
+### Failure modes and fallbacks
+
+| Failure | What the code does |
+|---|---|
+| App API retries duplicate events | `01_staging.sql` keeps the first row per `event_id`; 279,330 raw events become 271,194. |
+| A regional app outage drops one or two weeks of events | Nothing detects it. The missing weeks arrive in the panel as zero quotes and visits, and the models read them as quiet weeks. A per-region event-count check would catch it; it is not built. |
+| Order lines cancelled and re-keyed | Cancelled lines and zero quantities are dropped in staging so the re-keyed line is counted once. |
+| Delivery has no proof-of-delivery scan | Counted as `missing_pod` in the week it shipped and left out of the lateness and transit-time features; the boosted models take the resulting nulls natively. |
+| A line has too little history | Rows with fewer than eight weeks of history are left out of training; lags not yet available are null. ETS starts each series from the mean of its first weeks. |
+| A forecast is missing for a SKU-week | The order-up-to target treats it as zero, so that week is covered by safety stock alone. |
+| No z up to 8 reaches 98% fill | `z_for_fill_rate` returns NaN and the matched-fill columns fall back to the fixed z = 1.65 result. It did not happen on the full run. |
+| Source tables missing | The CLI regenerates them before running. There is no freshness check on late-arriving data. |
+| Model degrades | Not handled. Models are trained once per run, with no retraining cadence or drift monitoring; this is listed under Known limitations. |
+| Solver or LLM timeout | Not applicable: the z search is a fixed 40-step bisection and there is no LLM, model server or network call in the pipeline. |
+
+### Path to production
+
+This is a mapping of each local piece to what would replace it in a deployed system, not a
+description of one that exists.
+
+| Here | Production equivalent |
+|---|---|
+| Seeded generator writing parquet to `data/raw/` | ERP order lines, WMS/TMS shipment events and the field app's API log landed daily in BigQuery (or Snowflake / Redshift), partitioned by date |
+| DuckDB running the three SQL files | The same SQL on BigQuery ([`docs/BIGQUERY.md`](docs/BIGQUERY.md)), as scheduled or dbt models; `panel` and `features` partitioned by `week_start`, clustered by `customer_id, sku_id`, built incrementally per week |
+| `make run` on a laptop | A weekly Airflow (Cloud Composer) or Step Functions DAG that finishes before the Friday replenishment run |
+| LightGBM / XGBoost fitted in-process | A training pipeline (Vertex AI or SageMaker) writing versioned models to a registry, with batch scoring of the latest `week_start` (no target columns) |
+| `inventory.simulate` and the matched-fill search | Stays offline as the model-selection gate; production order quantities come from the ERP's replenishment module fed with SKU forecasts and per-SKU sigma |
+| `outputs/*.csv` and `results.md` | Forecast and safety-stock tables in the warehouse, a planner dashboard (Looker or similar), P(order) lists for reps |
+| Docker image | Container image in Artifact Registry / ECR used by the training and scoring jobs |
+| Monitoring and retraining | Weekly SKU-level 1 - WAPE and bias against actuals, realised fill rate and stock value against the backtest, per-region app event counts to catch outages, feature drift on quote volumes, and scheduled retraining with the matched-fill backtest as the promotion gate |
+
 ## The problem
 
 A wholesale distributor sells 150 SKUs to 400 retail customers. Each customer buys a few dozen
