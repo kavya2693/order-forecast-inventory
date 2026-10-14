@@ -214,7 +214,7 @@ whenever it is unsure, which then runs the warehouse short. A model can look bet
 number and be worse for stock ([ADR-0001](docs/adr/0001-two-stage-model-scored-by-inventory.md)).
 
 The joins are the other half. App events arrive through an API that retries on timeouts, so the
-log carries duplicates, and two regional outages drop whole weeks of events. Order lines are
+log carries duplicates, and three regional outages drop whole weeks of events. Order lines are
 cancelled and re-keyed. A shipment fact (short ship, late delivery, missing proof of delivery)
 has to be dated to the week it became known, not the week of the order, or the features leak.
 
@@ -381,7 +381,7 @@ cases, and that the two-stage model loses the quote signal when the app features
 - **Biggest gap: the field-app lift is a property of the generator.** A quote request precedes
   an order because the generator says so, at a rate I chose. The pipeline finds the signal and
   the ablation measures it, but how much a real rep's quote log predicts real orders has to be
-  measured on real data before the 47% holding-cost number means anything. The same applies,
+  measured on real data before the 48.7% holding-cost number means anything. The same applies,
   more weakly, to the short-shipment reorder effect.
 - Line-level accuracy is poor for every method and negative two weeks ahead. The result rests on
   aggregation to SKU level; a use case that needs line-level forecasts (customer-specific

@@ -4,7 +4,7 @@ Writes, as parquet under ``data/raw``:
 
 - ``sales_orders``     one row per order line (ERP), including cancelled lines
 - ``field_app_events`` visit check-ins, catalog views and quote requests from the reps' app API,
-                       with API-retry duplicates and two regional outage windows
+                       with API-retry duplicates and three regional outage windows
 - ``shipments``        one row per shipped line (WMS/TMS), with partial and late deliveries
 - ``customers``, ``skus`` small dimension tables
 
